@@ -6,14 +6,18 @@ architecture and [`ROADMAP.md`](./ROADMAP.md) for scope and sequencing.
 
 ## Status
 
-Early scaffold. Currently implemented:
+MVP in progress. Currently implemented:
 
 - Project scaffold (Vite + React + TypeScript, Zustand, Vitest)
 - Data model layer (TypeScript types + Zod schemas for all persisted entities)
 - Local file access wrapper (File System Access API, Chromium only for now)
 - Fountain parsing with the `[[id:scn_xxxx]]` stable scene ID convention
+- Bitácora: open/create a project folder, and a Tiptap-based block editor
+  (Heading/Action/Character/Parenthetical/Dialogue) with Tab-to-cycle block
+  types, autosave to `.fountain`, and a scene list sidebar
 
-No editor UI yet — see `ROADMAP.md` for what comes next.
+See `ROADMAP.md` for what comes next (Brújula analysis, Constelación,
+Pulso, Ruta, ...).
 
 ## Requirements
 

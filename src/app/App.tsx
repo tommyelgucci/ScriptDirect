@@ -1,15 +1,15 @@
-import { useAppStore } from '../shared/store/useAppStore'
-import './App.css'
+import { HashRouter, Route, Routes } from 'react-router-dom'
+import { EditorScreen } from '../features/bitacora/EditorScreen'
+import { HomeScreen } from './HomeScreen'
 
 function App() {
-  const uiLanguage = useAppStore((state) => state.uiLanguage)
-
   return (
-    <main className="app-shell">
-      <h1>ScriptDirect</h1>
-      <p>Local-first screenwriting suite. Project scaffold in progress.</p>
-      <p className="app-shell__language">UI language: {uiLanguage}</p>
-    </main>
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<HomeScreen />} />
+        <Route path="/editor" element={<EditorScreen />} />
+      </Routes>
+    </HashRouter>
   )
 }
 

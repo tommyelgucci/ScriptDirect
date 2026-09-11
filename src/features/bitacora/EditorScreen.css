@@ -1,0 +1,36 @@
+.editor-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.editor-screen--loading,
+.editor-screen--error {
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-screen__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #333;
+  font-size: 0.85rem;
+}
+
+.editor-screen__status {
+  color: #888;
+  margin-left: auto;
+}
+
+.editor-screen__body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.editor-screen__body .block-editor {
+  flex: 1;
+  overflow-y: auto;
+}

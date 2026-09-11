@@ -1,0 +1,17 @@
+.home-screen {
+  max-width: 640px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+.home-screen button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.home-screen__error {
+  margin-top: 1rem;
+  color: #c0392b;
+}

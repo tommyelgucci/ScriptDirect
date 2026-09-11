@@ -21,6 +21,15 @@ export interface ProjectFileSystem {
   readCharactersJson(): Promise<string | null>
   writeCharactersJson(content: string): Promise<void>
 
+  /**
+   * Not in ARCHITECTURE.md's original example folder tree, but follows the
+   * exact same pattern as characters.json — ARCHITECTURE.md's data model
+   * lists Location as "same pattern as Character", so it gets the same
+   * sidecar file.
+   */
+  readLocationsJson(): Promise<string | null>
+  writeLocationsJson(content: string): Promise<void>
+
   /** File names as they appear on disk, e.g. ["s01e10.fountain"]. */
   listEpisodeFountainFileNames(): Promise<string[]>
   readEpisodeFountain(fountainFileName: string): Promise<string>

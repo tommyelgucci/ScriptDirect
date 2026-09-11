@@ -1,0 +1,32 @@
+/**
+ * Read/write access to a single ScriptDirect project folder, matching the
+ * layout defined in ARCHITECTURE.md:
+ *
+ *   my-project/
+ *     project.json
+ *     characters.json
+ *     episodes/
+ *       s01e10.fountain
+ *       s01e10.meta.json
+ *
+ * All methods work with raw file text; parsing and Zod validation happen in
+ * the entities layer, not here.
+ */
+export interface ProjectFileSystem {
+  readonly projectName: string
+
+  readProjectJson(): Promise<string | null>
+  writeProjectJson(content: string): Promise<void>
+
+  readCharactersJson(): Promise<string | null>
+  writeCharactersJson(content: string): Promise<void>
+
+  /** File names as they appear on disk, e.g. ["s01e10.fountain"]. */
+  listEpisodeFountainFileNames(): Promise<string[]>
+  readEpisodeFountain(fountainFileName: string): Promise<string>
+  writeEpisodeFountain(fountainFileName: string, content: string): Promise<void>
+
+  /** null when the episode has no sidecar metadata yet. */
+  readEpisodeMeta(fountainFileName: string): Promise<string | null>
+  writeEpisodeMeta(fountainFileName: string, content: string): Promise<void>
+}

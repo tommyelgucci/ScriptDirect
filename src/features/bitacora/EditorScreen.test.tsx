@@ -17,6 +17,10 @@ function fakeFileSystem(overrides: Partial<ProjectFileSystem> = {}): ProjectFile
     writeCharactersJson: async () => {},
     readLocationsJson: async () => null,
     writeLocationsJson: async () => {},
+    readVersionsIndexJson: async () => null,
+    writeVersionsIndexJson: async () => {},
+    readVersionFountain: async () => '',
+    writeVersionFountain: async () => {},
     listEpisodeFountainFileNames: async () => [],
     readEpisodeFountain: async () => '',
     writeEpisodeFountain: async () => {},
@@ -134,5 +138,43 @@ describe('EditorScreen', () => {
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
 
     clickSpy.mockRestore()
+  })
+
+  it('saves a labeled version snapshot of the current script', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('Primer borrador')
+    const writeVersionFountain = vi.fn(async (_fileName: string, _versionFileName: string, _content: string) => {})
+    const writeVersionsIndexJson = vi.fn(async (_fileName: string, _content: string) => {})
+    const fileSystem = fakeFileSystem({
+      readEpisodeFountain: async () => 'INT. KITCHEN - DAY\n\nAction line.',
+      writeVersionFountain,
+      writeVersionsIndexJson,
+    })
+    useAppStore.getState().openProject({ fileSystem, episodeFileName: 'script.fountain' })
+
+    renderEditorScreen()
+    await userEvent.click(await screen.findByRole('button', { name: /guardar versión/i }))
+
+    expect(writeVersionFountain).toHaveBeenCalledTimes(1)
+    const [, indexContent] = writeVersionsIndexJson.mock.calls[0]
+    expect(JSON.parse(indexContent)[0].label).toBe('Primer borrador')
+
+    vi.restoreAllMocks()
+  })
+
+  it('does not save a version when the label prompt is cancelled', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue(null)
+    const writeVersionFountain = vi.fn(async (_fileName: string, _versionFileName: string, _content: string) => {})
+    const fileSystem = fakeFileSystem({
+      readEpisodeFountain: async () => 'INT. KITCHEN - DAY\n\nAction line.',
+      writeVersionFountain,
+    })
+    useAppStore.getState().openProject({ fileSystem, episodeFileName: 'script.fountain' })
+
+    renderEditorScreen()
+    await userEvent.click(await screen.findByRole('button', { name: /guardar versión/i }))
+
+    expect(writeVersionFountain).not.toHaveBeenCalled()
+
+    vi.restoreAllMocks()
   })
 })

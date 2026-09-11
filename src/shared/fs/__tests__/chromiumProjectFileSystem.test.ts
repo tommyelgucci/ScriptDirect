@@ -84,4 +84,27 @@ describe('ChromiumProjectFileSystem', () => {
     const fs = createFileSystem()
     await expect(fs.readEpisodeFountain('missing.fountain')).rejects.toMatchObject({ name: 'NotFoundError' })
   })
+
+  it('returns null for the versions index before any snapshot has been saved', async () => {
+    const fs = createFileSystem()
+    expect(await fs.readVersionsIndexJson('script.fountain')).toBeNull()
+  })
+
+  it('round-trips the versions index and a version snapshot, scoped per episode', async () => {
+    const fs = createFileSystem()
+    await fs.writeVersionsIndexJson('script.fountain', '[{"id":"ver_a"}]')
+    await fs.writeVersionFountain('script.fountain', '2026-08-18T12-00-00-000Z.fountain', 'INT. KITCHEN - DAY')
+
+    expect(await fs.readVersionsIndexJson('script.fountain')).toBe('[{"id":"ver_a"}]')
+    expect(await fs.readVersionFountain('script.fountain', '2026-08-18T12-00-00-000Z.fountain')).toBe(
+      'INT. KITCHEN - DAY',
+    )
+  })
+
+  it('throws a NotFoundError reading a version snapshot that does not exist', async () => {
+    const fs = createFileSystem()
+    await expect(fs.readVersionFountain('script.fountain', 'missing.fountain')).rejects.toMatchObject({
+      name: 'NotFoundError',
+    })
+  })
 })

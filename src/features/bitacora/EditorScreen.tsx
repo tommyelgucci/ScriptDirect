@@ -158,6 +158,7 @@ export function EditorScreen() {
           {saveStatus === 'error' && 'Error al guardar'}
         </span>
         <Link to="/brujula">Brújula</Link>
+        <Link to="/constelacion">Constelación</Link>
         <Link to="/settings">Configuración</Link>
         <button type="button" onClick={handleExportPdf}>
           Exportar PDF

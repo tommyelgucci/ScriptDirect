@@ -38,4 +38,15 @@ export interface ProjectFileSystem {
   /** null when the episode has no sidecar metadata yet. */
   readEpisodeMeta(fountainFileName: string): Promise<string | null>
   writeEpisodeMeta(fountainFileName: string, content: string): Promise<void>
+
+  /**
+   * Version snapshots, under versions/<episode base name>/ per
+   * ARCHITECTURE.md's folder layout. The index (null when no snapshot has
+   * ever been saved) tracks id/label/timestamp per snapshot file; the
+   * snapshot itself is a plain .fountain text file.
+   */
+  readVersionsIndexJson(fountainFileName: string): Promise<string | null>
+  writeVersionsIndexJson(fountainFileName: string, content: string): Promise<void>
+  readVersionFountain(fountainFileName: string, versionFileName: string): Promise<string>
+  writeVersionFountain(fountainFileName: string, versionFileName: string, content: string): Promise<void>
 }

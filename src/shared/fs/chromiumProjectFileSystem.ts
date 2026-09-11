@@ -1,10 +1,12 @@
-import { metaFileNameFor } from './fountainFileName'
+import { episodeBaseName, metaFileNameFor } from './fountainFileName'
 import type { ProjectFileSystem } from './types'
 
 const PROJECT_JSON = 'project.json'
 const CHARACTERS_JSON = 'characters.json'
 const LOCATIONS_JSON = 'locations.json'
 const EPISODES_DIR = 'episodes'
+const VERSIONS_DIR = 'versions'
+const VERSIONS_INDEX_JSON = 'index.json'
 
 async function readFileIfExists(dir: FileSystemDirectoryHandle, name: string): Promise<string | null> {
   try {
@@ -43,6 +45,11 @@ export class ChromiumProjectFileSystem implements ProjectFileSystem {
 
   private async episodesDir(create: boolean): Promise<FileSystemDirectoryHandle> {
     return this.root.getDirectoryHandle(EPISODES_DIR, { create })
+  }
+
+  private async versionsDir(fountainFileName: string, create: boolean): Promise<FileSystemDirectoryHandle> {
+    const versionsRoot = await this.root.getDirectoryHandle(VERSIONS_DIR, { create })
+    return versionsRoot.getDirectoryHandle(episodeBaseName(fountainFileName), { create })
   }
 
   readProjectJson(): Promise<string | null> {
@@ -120,5 +127,37 @@ export class ChromiumProjectFileSystem implements ProjectFileSystem {
   async writeEpisodeMeta(fountainFileName: string, content: string): Promise<void> {
     const episodes = await this.episodesDir(true)
     await writeFile(episodes, metaFileNameFor(fountainFileName), content)
+  }
+
+  async readVersionsIndexJson(fountainFileName: string): Promise<string | null> {
+    let dir: FileSystemDirectoryHandle
+    try {
+      dir = await this.versionsDir(fountainFileName, false)
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'NotFoundError') {
+        return null
+      }
+      throw error
+    }
+    return readFileIfExists(dir, VERSIONS_INDEX_JSON)
+  }
+
+  async writeVersionsIndexJson(fountainFileName: string, content: string): Promise<void> {
+    const dir = await this.versionsDir(fountainFileName, true)
+    await writeFile(dir, VERSIONS_INDEX_JSON, content)
+  }
+
+  async readVersionFountain(fountainFileName: string, versionFileName: string): Promise<string> {
+    const dir = await this.versionsDir(fountainFileName, false)
+    const content = await readFileIfExists(dir, versionFileName)
+    if (content === null) {
+      throw new DOMException(`${versionFileName} not found`, 'NotFoundError')
+    }
+    return content
+  }
+
+  async writeVersionFountain(fountainFileName: string, versionFileName: string, content: string): Promise<void> {
+    const dir = await this.versionsDir(fountainFileName, true)
+    await writeFile(dir, versionFileName, content)
   }
 }

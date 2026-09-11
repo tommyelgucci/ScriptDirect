@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest'
+import type { ProjectFileSystem } from '../fs/types'
 import { useAppStore } from './useAppStore'
+
+function fakeFileSystem(): ProjectFileSystem {
+  return {
+    projectName: 'My Project',
+    readProjectJson: async () => null,
+    writeProjectJson: async () => {},
+    readCharactersJson: async () => null,
+    writeCharactersJson: async () => {},
+    listEpisodeFountainFileNames: async () => [],
+    readEpisodeFountain: async () => '',
+    writeEpisodeFountain: async () => {},
+    readEpisodeMeta: async () => null,
+    writeEpisodeMeta: async () => {},
+  }
+}
 
 describe('useAppStore', () => {
   it('defaults the UI language to Spanish', () => {
@@ -12,5 +28,19 @@ describe('useAppStore', () => {
 
     useAppStore.getState().setUiLanguage('es')
     expect(useAppStore.getState().uiLanguage).toBe('es')
+  })
+
+  it('has no open project by default', () => {
+    expect(useAppStore.getState().project).toBeNull()
+  })
+
+  it('opens and closes a project session', () => {
+    const fileSystem = fakeFileSystem()
+    useAppStore.getState().openProject({ fileSystem, episodeFileName: 'script.fountain' })
+
+    expect(useAppStore.getState().project).toEqual({ fileSystem, episodeFileName: 'script.fountain' })
+
+    useAppStore.getState().closeProject()
+    expect(useAppStore.getState().project).toBeNull()
   })
 })

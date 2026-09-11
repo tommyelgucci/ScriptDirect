@@ -1,11 +1,13 @@
 import type { Editor, JSONContent } from '@tiptap/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { ensureSceneIds, parseFountainDocument } from '../../shared/fountain'
+import { downloadBlob } from '../../shared/pdf/downloadBlob'
+import { exportScreenplayPdf } from '../../shared/pdf/exportScreenplayPdf'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { BlockEditor } from './BlockEditor'
 import './EditorScreen.css'
-import { scenesToTiptapDoc } from './fountainTiptap'
+import { scenesToTiptapDoc, tiptapDocToFountainText } from './fountainTiptap'
 import { saveDoc } from './saveDoc'
 import { extractSceneList } from './sceneList'
 import { SceneSidebar } from './SceneSidebar'
@@ -103,6 +105,15 @@ export function EditorScreen() {
     editorRef.current = editor
   }, [])
 
+  const handleExportPdf = useCallback(async () => {
+    if (!project || !content) {
+      return
+    }
+    const scenes = parseFountainDocument(ensureSceneIds(tiptapDocToFountainText(content)))
+    const bytes = await exportScreenplayPdf(project.fileSystem.projectName, scenes)
+    downloadBlob(bytes, `${project.fileSystem.projectName}.pdf`, 'application/pdf')
+  }, [project, content])
+
   const handleSelectScene = useCallback((sceneId: string) => {
     const editor = editorRef.current
     if (!editor) {
@@ -146,6 +157,11 @@ export function EditorScreen() {
           {saveStatus === 'saved' && 'Guardado'}
           {saveStatus === 'error' && 'Error al guardar'}
         </span>
+        <Link to="/brujula">Brújula</Link>
+        <Link to="/settings">Configuración</Link>
+        <button type="button" onClick={handleExportPdf}>
+          Exportar PDF
+        </button>
         <button type="button" onClick={closeProject}>
           Cerrar proyecto
         </button>

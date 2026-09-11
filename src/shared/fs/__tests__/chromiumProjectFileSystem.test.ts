@@ -31,6 +31,17 @@ describe('ChromiumProjectFileSystem', () => {
     expect(await fs.readCharactersJson()).toBe('[]')
   })
 
+  it('returns null for locations.json before it has ever been written', async () => {
+    const fs = createFileSystem()
+    expect(await fs.readLocationsJson()).toBeNull()
+  })
+
+  it('round-trips locations.json', async () => {
+    const fs = createFileSystem()
+    await fs.writeLocationsJson('[]')
+    expect(await fs.readLocationsJson()).toBe('[]')
+  })
+
   it('lists no episodes before the episodes folder exists', async () => {
     const fs = createFileSystem()
     expect(await fs.listEpisodeFountainFileNames()).toEqual([])

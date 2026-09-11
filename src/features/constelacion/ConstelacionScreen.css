@@ -1,0 +1,40 @@
+.constelacion-screen {
+  max-width: 42rem;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.constelacion-screen__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.constelacion-screen section {
+  margin-top: 2rem;
+}
+
+.constelacion-screen__loading,
+.constelacion-screen__empty {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.constelacion-screen table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.constelacion-screen th,
+.constelacion-screen td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #333;
+}
+
+.constelacion-screen th {
+  color: #888;
+  font-weight: normal;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}

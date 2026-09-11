@@ -6,10 +6,15 @@ Local project folder access, implementing the layout from `ARCHITECTURE.md`:
 my-project/
   project.json
   characters.json
+  locations.json
   episodes/
     s01e10.fountain
     s01e10.meta.json
 ```
+
+`locations.json` isn't in ARCHITECTURE.md's original example tree, but follows
+exactly the same pattern as `characters.json` — ARCHITECTURE.md's data model
+lists Location as "same pattern as Character".
 
 - `pickProjectFolder()` — opens the browser folder picker and returns a
   `ProjectFileSystem` for the chosen folder.

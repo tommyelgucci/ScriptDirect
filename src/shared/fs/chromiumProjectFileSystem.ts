@@ -3,6 +3,7 @@ import type { ProjectFileSystem } from './types'
 
 const PROJECT_JSON = 'project.json'
 const CHARACTERS_JSON = 'characters.json'
+const LOCATIONS_JSON = 'locations.json'
 const EPISODES_DIR = 'episodes'
 
 async function readFileIfExists(dir: FileSystemDirectoryHandle, name: string): Promise<string | null> {
@@ -58,6 +59,14 @@ export class ChromiumProjectFileSystem implements ProjectFileSystem {
 
   writeCharactersJson(content: string): Promise<void> {
     return writeFile(this.root, CHARACTERS_JSON, content)
+  }
+
+  readLocationsJson(): Promise<string | null> {
+    return readFileIfExists(this.root, LOCATIONS_JSON)
+  }
+
+  writeLocationsJson(content: string): Promise<void> {
+    return writeFile(this.root, LOCATIONS_JSON, content)
   }
 
   async listEpisodeFountainFileNames(): Promise<string[]> {

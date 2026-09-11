@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { createId } from '../entities/id'
 import type { Project } from '../entities/project'
 import { projectSchema } from '../entities/project'
@@ -62,6 +62,9 @@ export function HomeScreen() {
       <button type="button" onClick={handleOpenProject} disabled={isOpening}>
         {isOpening ? 'Abriendo…' : 'Abrir carpeta de proyecto'}
       </button>
+      <p>
+        <Link to="/settings">Configuración</Link>
+      </p>
       {error && (
         <p role="alert" className="home-screen__error">
           {error}

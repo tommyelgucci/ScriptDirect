@@ -116,4 +116,21 @@ describe('EditorScreen', () => {
     expect(await screen.findByText('Home screen')).toBeInTheDocument()
     expect(useAppStore.getState().project).toBeNull()
   })
+
+  it('exports the current script as a downloaded PDF', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+    URL.revokeObjectURL = vi.fn()
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    const fileSystem = fakeFileSystem({ readEpisodeFountain: async () => 'INT. KITCHEN - DAY\n\nAction line.' })
+    useAppStore.getState().openProject({ fileSystem, episodeFileName: 'script.fountain' })
+
+    renderEditorScreen()
+    await userEvent.click(await screen.findByRole('button', { name: /exportar pdf/i }))
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
+
+    clickSpy.mockRestore()
+  })
 })

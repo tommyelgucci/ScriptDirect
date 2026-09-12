@@ -42,7 +42,7 @@ function renderHomeScreen() {
     <MemoryRouter initialEntries={['/']}>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
-        <Route path="/editor" element={<p>Editor screen</p>} />
+        <Route path="/episodios" element={<p>Episodes screen</p>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -66,7 +66,7 @@ describe('HomeScreen', () => {
     renderHomeScreen()
     await userEvent.click(screen.getByRole('button', { name: /abrir carpeta de proyecto/i }))
 
-    await waitFor(() => expect(screen.getByText('Editor screen')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Episodes screen')).toBeInTheDocument())
     expect(writeProjectJson).toHaveBeenCalledTimes(1)
     expect(useAppStore.getState().project?.fileSystem).toBe(fileSystem)
     expect(useAppStore.getState().project?.episodeFileName).toBe('script.fountain')
@@ -90,7 +90,7 @@ describe('HomeScreen', () => {
     renderHomeScreen()
     await userEvent.click(screen.getByRole('button', { name: /abrir carpeta de proyecto/i }))
 
-    await waitFor(() => expect(screen.getByText('Editor screen')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Episodes screen')).toBeInTheDocument())
     expect(writeProjectJson).not.toHaveBeenCalled()
   })
 
@@ -101,7 +101,7 @@ describe('HomeScreen', () => {
     await userEvent.click(screen.getByRole('button', { name: /abrir carpeta de proyecto/i }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/no es válido/i)
-    expect(screen.queryByText('Editor screen')).not.toBeInTheDocument()
+    expect(screen.queryByText('Episodes screen')).not.toBeInTheDocument()
   })
 
   it('shows the browser-unsupported message when the File System Access API is unavailable', async () => {

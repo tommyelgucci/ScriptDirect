@@ -43,7 +43,7 @@ export function HomeScreen() {
       }
 
       openProject({ fileSystem, episodeFileName: DEFAULT_EPISODE_FILE_NAME })
-      navigate('/editor')
+      navigate('/episodios')
     } catch (caught) {
       if (caught instanceof FileSystemAccessUnsupportedError) {
         setError(caught.message)

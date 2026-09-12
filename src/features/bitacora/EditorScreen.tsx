@@ -172,6 +172,7 @@ export function EditorScreen() {
         </span>
         <Link to="/brujula">Brújula</Link>
         <Link to="/constelacion">Constelación</Link>
+        <Link to="/ruta">Ruta</Link>
         <Link to="/historial">Historial</Link>
         <Link to="/settings">Configuración</Link>
         <button type="button" onClick={handleSaveVersion}>

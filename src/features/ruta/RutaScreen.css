@@ -1,0 +1,45 @@
+.ruta-screen {
+  max-width: 48rem;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.ruta-screen__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.ruta-screen__loading,
+.ruta-screen__empty {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.ruta-screen table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.ruta-screen th,
+.ruta-screen td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid #333;
+}
+
+.ruta-screen__row--act-1 {
+  background: rgba(52, 152, 219, 0.08);
+}
+
+.ruta-screen__row--act-2 {
+  background: rgba(241, 196, 15, 0.08);
+}
+
+.ruta-screen__row--act-3 {
+  background: rgba(46, 204, 113, 0.08);
+}
+
+.ruta-screen input[type='text'] {
+  width: 100%;
+}

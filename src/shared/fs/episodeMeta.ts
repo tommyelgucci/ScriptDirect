@@ -16,9 +16,10 @@ export async function readEpisodeMeta(
 
 /**
  * Reads the existing episode meta, merges in `patch`, and writes the result
- * back. `analysisReport` (Brújula) and `beats` (Ruta) live in the same
- * sidecar file, so writing one field from scratch would silently reset the
- * other to its schema default — this always reads first to avoid that.
+ * back. `analysisReport` (Brújula), `sceneMetrics` (Pulso), and `beats`
+ * (Ruta) all live in the same sidecar file, so writing one field from
+ * scratch would silently reset the others to their schema default — this
+ * always reads first to avoid that.
  */
 export async function updateEpisodeMeta(
   fileSystem: ProjectFileSystem,

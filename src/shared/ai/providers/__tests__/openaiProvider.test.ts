@@ -40,4 +40,33 @@ describe('openaiProvider', () => {
       /429/,
     )
   })
+
+  it('analyzes scene metrics without forcing JSON-object mode (the response is an array)', async () => {
+    const metrics = [
+      {
+        sceneId: 'scn_aaaaaaaaaaaa',
+        emotionalIntensity: 80,
+        dramaticTension: 60,
+        attentionCapture: 90,
+        commercialPotential: 40,
+        dominantEmotion: 'fear',
+      },
+    ]
+    const fetchMock = vi.fn(
+      async (_url: string, _init?: RequestInit) =>
+        new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(metrics) } }] })),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await openaiProvider.analyzeSceneMetrics({
+      apiKey: 'sk-oai-test',
+      model: 'gpt-4o',
+      scriptText: 'INT. KITCHEN - DAY',
+    })
+
+    expect(result).toEqual(metrics)
+    const [, init] = fetchMock.mock.calls[0]
+    const body = JSON.parse(init!.body as string)
+    expect(body.response_format).toBeUndefined()
+  })
 })

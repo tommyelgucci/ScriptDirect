@@ -39,4 +39,29 @@ describe('anthropicProvider', () => {
       anthropicProvider.analyzeScript({ apiKey: 'bad-key', model: 'claude-sonnet-5', scriptText: '' }),
     ).rejects.toThrow(/401/)
   })
+
+  it('analyzes scene metrics, returning the parsed array', async () => {
+    const metrics = [
+      {
+        sceneId: 'scn_aaaaaaaaaaaa',
+        emotionalIntensity: 80,
+        dramaticTension: 60,
+        attentionCapture: 90,
+        commercialPotential: 40,
+        dominantEmotion: 'fear',
+      },
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ content: [{ text: JSON.stringify(metrics) }] }))),
+    )
+
+    const result = await anthropicProvider.analyzeSceneMetrics({
+      apiKey: 'sk-ant-test',
+      model: 'claude-sonnet-5',
+      scriptText: 'INT. KITCHEN - DAY',
+    })
+
+    expect(result).toEqual(metrics)
+  })
 })

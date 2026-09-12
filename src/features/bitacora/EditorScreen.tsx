@@ -192,6 +192,7 @@ export function EditorScreen() {
         <Link to="/constelacion">Constelación</Link>
         <Link to="/pulso">Pulso</Link>
         <Link to="/ruta">Ruta</Link>
+        <Link to="/cuaderno">Cuaderno</Link>
         <Link to="/historial">Historial</Link>
         <Link to="/settings">Configuración</Link>
         <button type="button" onClick={handleSaveVersion}>

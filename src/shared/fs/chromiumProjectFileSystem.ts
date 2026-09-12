@@ -4,6 +4,7 @@ import type { ProjectFileSystem } from './types'
 const PROJECT_JSON = 'project.json'
 const CHARACTERS_JSON = 'characters.json'
 const LOCATIONS_JSON = 'locations.json'
+const CUADERNO_JSON = 'cuaderno.json'
 const EPISODES_DIR = 'episodes'
 const VERSIONS_DIR = 'versions'
 const VERSIONS_INDEX_JSON = 'index.json'
@@ -74,6 +75,14 @@ export class ChromiumProjectFileSystem implements ProjectFileSystem {
 
   writeLocationsJson(content: string): Promise<void> {
     return writeFile(this.root, LOCATIONS_JSON, content)
+  }
+
+  readCuadernoJson(): Promise<string | null> {
+    return readFileIfExists(this.root, CUADERNO_JSON)
+  }
+
+  writeCuadernoJson(content: string): Promise<void> {
+    return writeFile(this.root, CUADERNO_JSON, content)
   }
 
   async listEpisodeFountainFileNames(): Promise<string[]> {

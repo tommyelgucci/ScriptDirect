@@ -5,6 +5,7 @@ import type { ProjectFileSystem } from './types'
 const PROJECT_JSON = 'project.json'
 const CHARACTERS_JSON = 'characters.json'
 const LOCATIONS_JSON = 'locations.json'
+const CUADERNO_JSON = 'cuaderno.json'
 const EPISODES_DIR = 'episodes'
 const VERSIONS_DIR = 'versions'
 const VERSIONS_INDEX_JSON = 'index.json'
@@ -84,6 +85,14 @@ export class ZipProjectFileSystem implements ProjectFileSystem {
 
   async writeLocationsJson(content: string): Promise<void> {
     this.files.set(LOCATIONS_JSON, content)
+  }
+
+  async readCuadernoJson(): Promise<string | null> {
+    return this.read(CUADERNO_JSON)
+  }
+
+  async writeCuadernoJson(content: string): Promise<void> {
+    this.files.set(CUADERNO_JSON, content)
   }
 
   async listEpisodeFountainFileNames(): Promise<string[]> {

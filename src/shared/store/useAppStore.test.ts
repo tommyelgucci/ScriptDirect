@@ -11,6 +11,8 @@ function fakeFileSystem(): ProjectFileSystem {
     writeCharactersJson: async () => {},
     readLocationsJson: async () => null,
     writeLocationsJson: async () => {},
+    readCuadernoJson: async () => null,
+    writeCuadernoJson: async () => {},
     readVersionsIndexJson: async () => null,
     writeVersionsIndexJson: async () => {},
     readVersionFountain: async () => '',

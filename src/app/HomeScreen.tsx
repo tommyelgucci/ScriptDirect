@@ -3,7 +3,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createId } from '../entities/id'
 import type { Project } from '../entities/project'
 import { projectSchema } from '../entities/project'
-import { FileSystemAccessUnsupportedError, pickProjectFolder, ProjectFolderSelectionCancelledError } from '../shared/fs'
+import {
+  FileSystemAccessUnsupportedError,
+  needsZipFallback,
+  pickProjectFolder,
+  pickProjectZipFile,
+  ProjectFolderSelectionCancelledError,
+  ZipProjectFileSystem,
+} from '../shared/fs'
 import { DEFAULT_EPISODE_FILE_NAME, useAppStore } from '../shared/store/useAppStore'
 import './HomeScreen.css'
 
@@ -57,13 +64,71 @@ export function HomeScreen() {
     }
   }
 
+  async function handleImportZip() {
+    setError(null)
+    setIsOpening(true)
+    try {
+      const file = await pickProjectZipFile()
+      if (!file) {
+        return // writer dismissed the picker; nothing went wrong
+      }
+      const projectName = file.name.replace(/\.zip$/i, '')
+      const fileSystem = await ZipProjectFileSystem.importZip(new Uint8Array(await file.arrayBuffer()), projectName)
+      const existingJson = await fileSystem.readProjectJson()
+      if (!existingJson) {
+        setError('Este .zip no contiene un proyecto de ScriptDirect (falta project.json).')
+        return
+      }
+      const parsed = projectSchema.safeParse(JSON.parse(existingJson))
+      if (!parsed.success) {
+        setError('El archivo project.json de este .zip no es válido.')
+        return
+      }
+      openProject({ fileSystem, episodeFileName: DEFAULT_EPISODE_FILE_NAME })
+      navigate('/episodios')
+    } catch {
+      setError('No se pudo leer el archivo .zip.')
+    } finally {
+      setIsOpening(false)
+    }
+  }
+
+  function handleCreateZipProject() {
+    setError(null)
+    const name = window.prompt('Nombre del proyecto:')
+    if (!name) {
+      return // writer cancelled or left it empty
+    }
+    const fileSystem = ZipProjectFileSystem.createEmpty(name)
+    const project = createNewProject(name)
+    void fileSystem.writeProjectJson(JSON.stringify(project, null, 2))
+    openProject({ fileSystem, episodeFileName: DEFAULT_EPISODE_FILE_NAME })
+    navigate('/episodios')
+  }
+
   return (
     <main className="home-screen">
       <h1>ScriptDirect</h1>
       <p>Suite de guionismo local-first. Un proyecto es una carpeta en tu disco.</p>
-      <button type="button" onClick={handleOpenProject} disabled={isOpening}>
-        {isOpening ? 'Abriendo…' : 'Abrir carpeta de proyecto'}
-      </button>
+      {needsZipFallback() ? (
+        <>
+          <p className="home-screen__zip-notice">
+            Tu navegador (Safari o Firefox) no permite abrir carpetas directamente. ScriptDirect guarda tu proyecto
+            como un archivo .zip en su lugar — recuerda exportarlo desde el editor después de cada sesión de
+            trabajo, o instala la versión de escritorio para guardado automático en una carpeta real.
+          </p>
+          <button type="button" onClick={handleImportZip} disabled={isOpening}>
+            {isOpening ? 'Abriendo…' : 'Importar proyecto (.zip)'}
+          </button>
+          <button type="button" onClick={handleCreateZipProject} disabled={isOpening}>
+            Crear nuevo proyecto
+          </button>
+        </>
+      ) : (
+        <button type="button" onClick={handleOpenProject} disabled={isOpening}>
+          {isOpening ? 'Abriendo…' : 'Abrir carpeta de proyecto'}
+        </button>
+      )}
       <p>
         <Link to="/settings">Configuración</Link>
       </p>

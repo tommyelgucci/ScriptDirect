@@ -5,10 +5,16 @@ import App from './App'
 describe('App', () => {
   beforeEach(() => {
     window.location.hash = ''
+    // Simulate a Chromium-based browser so the File System Access API path
+    // (rather than the Safari/Firefox .zip fallback) is what's under test here.
+    ;(window as { showDirectoryPicker?: unknown }).showDirectoryPicker = async () => {
+      throw new Error('not used in these tests')
+    }
   })
 
   afterEach(() => {
     window.location.hash = ''
+    delete (window as { showDirectoryPicker?: unknown }).showDirectoryPicker
   })
 
   it('renders the home screen at the default route', () => {

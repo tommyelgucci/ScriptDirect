@@ -2,6 +2,7 @@ import type { Editor, JSONContent } from '@tiptap/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { ensureSceneIds, parseFountainDocument } from '../../shared/fountain'
+import { ZipProjectFileSystem } from '../../shared/fs'
 import { downloadBlob } from '../../shared/pdf/downloadBlob'
 import { exportScreenplayPdf } from '../../shared/pdf/exportScreenplayPdf'
 import { useAppStore } from '../../shared/store/useAppStore'
@@ -115,6 +116,22 @@ export function EditorScreen() {
     downloadBlob(bytes, `${project.fileSystem.projectName}.pdf`, 'application/pdf')
   }, [project, content])
 
+  const handleExportZip = useCallback(async () => {
+    if (!project || !(project.fileSystem instanceof ZipProjectFileSystem)) {
+      return
+    }
+    // Flush any pending debounced autosave first, so the export can't miss the last edit.
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = null
+    }
+    if (latestDocRef.current) {
+      await saveDoc(project.fileSystem, project.episodeFileName, latestDocRef.current)
+    }
+    const bytes = await project.fileSystem.exportZip()
+    downloadBlob(bytes, `${project.fileSystem.projectName}.zip`, 'application/zip')
+  }, [project])
+
   const handleSaveVersion = useCallback(async () => {
     if (!project || !content) {
       return
@@ -183,6 +200,11 @@ export function EditorScreen() {
         <button type="button" onClick={handleExportPdf}>
           Exportar PDF
         </button>
+        {project.fileSystem instanceof ZipProjectFileSystem && (
+          <button type="button" onClick={handleExportZip}>
+            Exportar .zip (guardar)
+          </button>
+        )}
         <button type="button" onClick={closeProject}>
           Cerrar proyecto
         </button>

@@ -14,3 +14,13 @@ export function isFileSystemAccessSupported(): boolean {
 export function isTauriRuntime(): boolean {
   return isTauri()
 }
+
+/**
+ * True in Safari and Firefox: no Tauri desktop shell and no File System
+ * Access API, so `pickProjectFolder()` can't work at all. Callers should
+ * offer the ZIP import/export fallback (`ZipProjectFileSystem`,
+ * `pickProjectZipFile()`) instead — see shared/fs/README.md.
+ */
+export function needsZipFallback(): boolean {
+  return !isTauriRuntime() && !isFileSystemAccessSupported()
+}

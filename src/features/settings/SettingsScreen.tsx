@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { AiProviderName } from '../../entities/project'
 import { projectSchema } from '../../entities/project'
@@ -33,22 +33,34 @@ export function SettingsScreen() {
   const [apiKey, setApiKey] = useState('')
   const [saved, setSaved] = useState(false)
 
+  // Guards against readApiKey's async IPC round-trip (Tauri keychain)
+  // resolving out of order: whichever provider was requested most recently
+  // wins, even if an earlier request's key arrives later. Set synchronously
+  // at request time, not at resolution time, so it can't itself race.
+  const latestRequestedProviderRef = useRef<AiProviderName>('anthropic')
+
   async function applyProvider(nextProvider: AiProviderName, nextModel: string) {
+    latestRequestedProviderRef.current = nextProvider
     setProvider(nextProvider)
     setModel(nextModel)
-    setApiKey(await readApiKey(nextProvider))
+    const key = await readApiKey(nextProvider)
+    if (latestRequestedProviderRef.current === nextProvider) {
+      setApiKey(key)
+    }
   }
 
+  // Loads the initially-selected provider's key. 'provider'/'model' state
+  // already default to 'anthropic' via useState, so this only needs to read
+  // the key — no need to setState synchronously in the effect body for
+  // values that already match. The project effect below applies the
+  // project's real configured provider on top, once it resolves.
   useEffect(() => {
-    let cancelled = false
+    latestRequestedProviderRef.current = 'anthropic'
     readApiKey('anthropic').then((key) => {
-      if (!cancelled) {
+      if (latestRequestedProviderRef.current === 'anthropic') {
         setApiKey(key)
       }
     })
-    return () => {
-      cancelled = true
-    }
   }, [])
 
   useEffect(() => {

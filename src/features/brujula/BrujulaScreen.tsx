@@ -57,7 +57,7 @@ export function BrujulaScreen() {
         return
       }
 
-      const apiKey = readApiKey(aiProvider.provider)
+      const apiKey = await readApiKey(aiProvider.provider)
       if (!apiKey) {
         setErrorMessage('Falta la clave de API para este proveedor. Ve a Configuración.')
         return

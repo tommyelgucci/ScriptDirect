@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { AiProviderName } from '../../entities/project'
 import { projectSchema } from '../../entities/project'
 import { readApiKey, writeApiKey } from '../../shared/ai/apiKeyStorage'
+import { isTauriRuntime } from '../../shared/fs/capability'
 import { useAppStore } from '../../shared/store/useAppStore'
 import './SettingsScreen.css'
 
@@ -29,27 +30,39 @@ export function SettingsScreen() {
 
   const [provider, setProvider] = useState<AiProviderName>('anthropic')
   const [model, setModel] = useState(defaultModelFor('anthropic'))
-  const [apiKey, setApiKey] = useState(() => readApiKey('anthropic'))
+  const [apiKey, setApiKey] = useState('')
   const [saved, setSaved] = useState(false)
 
-  function applyProvider(nextProvider: AiProviderName, nextModel: string) {
+  async function applyProvider(nextProvider: AiProviderName, nextModel: string) {
     setProvider(nextProvider)
     setModel(nextModel)
-    setApiKey(readApiKey(nextProvider))
+    setApiKey(await readApiKey(nextProvider))
   }
+
+  useEffect(() => {
+    let cancelled = false
+    readApiKey('anthropic').then((key) => {
+      if (!cancelled) {
+        setApiKey(key)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (!project) {
       return
     }
     let cancelled = false
-    project.fileSystem.readProjectJson().then((json) => {
+    project.fileSystem.readProjectJson().then(async (json) => {
       if (cancelled || !json) {
         return
       }
       const parsed = projectSchema.safeParse(JSON.parse(json))
       if (parsed.success && parsed.data.aiProvider) {
-        applyProvider(
+        await applyProvider(
           parsed.data.aiProvider.provider,
           parsed.data.aiProvider.model ?? defaultModelFor(parsed.data.aiProvider.provider),
         )
@@ -61,11 +74,11 @@ export function SettingsScreen() {
   }, [project])
 
   function handleProviderChange(nextProvider: AiProviderName) {
-    applyProvider(nextProvider, defaultModelFor(nextProvider))
+    void applyProvider(nextProvider, defaultModelFor(nextProvider))
   }
 
   async function handleSave() {
-    writeApiKey(provider, apiKey)
+    await writeApiKey(provider, apiKey)
 
     if (project) {
       const json = await project.fileSystem.readProjectJson()
@@ -117,9 +130,9 @@ export function SettingsScreen() {
       <section>
         <h2>Proveedor de IA (BYOK)</h2>
         <p className="settings-screen__disclosure">
-          Tu clave se guarda solo en este navegador (localStorage) y se envía únicamente al proveedor que elijas —
-          nunca a un servidor de ScriptDirect. No es un almacenamiento fuertemente cifrado: evita usarla en un equipo
-          compartido.
+          {isTauriRuntime()
+            ? 'Tu clave se guarda en el llavero de tu sistema operativo y se envía únicamente al proveedor que elijas — nunca a un servidor de ScriptDirect.'
+            : 'Tu clave se guarda solo en este navegador (localStorage) y se envía únicamente al proveedor que elijas — nunca a un servidor de ScriptDirect. No es un almacenamiento fuertemente cifrado: evita usarla en un equipo compartido.'}
         </p>
 
         <label>

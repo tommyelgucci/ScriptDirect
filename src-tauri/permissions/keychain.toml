@@ -1,0 +1,8 @@
+[[permission]]
+identifier = "allow-keychain"
+description = "Allows reading, writing, and deleting BYOK API keys in the OS keychain, per ARCHITECTURE.md's Platform Strategy."
+commands.allow = [
+  "keychain_get_api_key",
+  "keychain_set_api_key",
+  "keychain_delete_api_key",
+]

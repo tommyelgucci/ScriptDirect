@@ -1,4 +1,5 @@
 export * from './analysis-report'
+export * from './beat'
 export * from './block'
 export * from './character'
 export * from './common'

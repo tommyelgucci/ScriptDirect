@@ -37,11 +37,12 @@ episode `.meta.json` files.
   show a clear message instead of a crash on unsupported browsers.
 - `episodeMeta.ts` — `readEpisodeMeta`/`updateEpisodeMeta`, a read-merge-write
   helper around `ProjectFileSystem.readEpisodeMeta`/`writeEpisodeMeta`.
-  Brújula's `analysisReport` and Pulso's `sceneMetrics` share one sidecar
-  file (`entities/episode-meta.ts`); writing a fresh object with only one of
-  those fields would let Zod's schema defaults silently reset the other, so
-  every feature that persists episode meta should go through
-  `updateEpisodeMeta` rather than calling `writeEpisodeMeta` directly.
+  Brújula's `analysisReport`, Pulso's `sceneMetrics`, and Ruta's `beats`
+  share one sidecar file (`entities/episode-meta.ts`); writing a fresh
+  object with only one of those fields would let Zod's schema defaults
+  silently reset the others, so every feature that persists episode meta
+  should go through `updateEpisodeMeta` rather than calling
+  `writeEpisodeMeta` directly.
 
 ## TODO: Safari/Firefox fallback
 

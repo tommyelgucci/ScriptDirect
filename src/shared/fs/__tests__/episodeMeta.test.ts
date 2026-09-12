@@ -33,6 +33,8 @@ const sceneMetric = {
   dominantEmotion: 'fear',
 }
 
+const beat = { sceneId: 'scn_aaaaaaaaaaaa', act: 2 as const, label: 'Midpoint' }
+
 const analysisReport = {
   id: 'rpt_aaaaaaaaaaaa',
   createdAt: new Date().toISOString(),
@@ -45,20 +47,24 @@ const analysisReport = {
 describe('readEpisodeMeta', () => {
   it('returns schema defaults when there is no sidecar file yet', async () => {
     const meta = await readEpisodeMeta(fakeFileSystem(), 'script.fountain')
-    expect(meta).toEqual({ analysisReport: null, sceneMetrics: [] })
+    expect(meta).toEqual({ analysisReport: null, sceneMetrics: [], beats: [] })
   })
 
   it('returns schema defaults when the sidecar file is malformed', async () => {
-    const meta = await readEpisodeMeta(fakeFileSystem({ readEpisodeMeta: async () => '{"sceneMetrics": "nope"}' }), 'script.fountain')
-    expect(meta).toEqual({ analysisReport: null, sceneMetrics: [] })
+    const meta = await readEpisodeMeta(
+      fakeFileSystem({ readEpisodeMeta: async () => '{"sceneMetrics": "nope"}' }),
+      'script.fountain',
+    )
+    expect(meta).toEqual({ analysisReport: null, sceneMetrics: [], beats: [] })
   })
 
   it('parses an existing sidecar file', async () => {
     const meta = await readEpisodeMeta(
-      fakeFileSystem({ readEpisodeMeta: async () => JSON.stringify({ sceneMetrics: [sceneMetric] }) }),
+      fakeFileSystem({ readEpisodeMeta: async () => JSON.stringify({ sceneMetrics: [sceneMetric], beats: [beat] }) }),
       'script.fountain',
     )
     expect(meta.sceneMetrics).toEqual([sceneMetric])
+    expect(meta.beats).toEqual([beat])
   })
 })
 
@@ -66,7 +72,7 @@ describe('updateEpisodeMeta', () => {
   it('merges a patch into the existing meta instead of overwriting the whole file', async () => {
     const writeEpisodeMeta = vi.fn(async (_fileName: string, _content: string) => {})
     const fileSystem = fakeFileSystem({
-      readEpisodeMeta: async () => JSON.stringify({ sceneMetrics: [sceneMetric] }),
+      readEpisodeMeta: async () => JSON.stringify({ sceneMetrics: [sceneMetric], beats: [beat] }),
       writeEpisodeMeta,
     })
 
@@ -77,12 +83,13 @@ describe('updateEpisodeMeta', () => {
     const saved = JSON.parse(savedJson)
     expect(saved.analysisReport.id).toBe('rpt_aaaaaaaaaaaa')
     expect(saved.sceneMetrics).toEqual([sceneMetric])
+    expect(saved.beats).toEqual([beat])
   })
 
-  it('merges the other way too: updating sceneMetrics preserves an existing analysisReport', async () => {
+  it('merges the other way too: updating sceneMetrics preserves an existing analysisReport and beats', async () => {
     const writeEpisodeMeta = vi.fn(async (_fileName: string, _content: string) => {})
     const fileSystem = fakeFileSystem({
-      readEpisodeMeta: async () => JSON.stringify({ analysisReport }),
+      readEpisodeMeta: async () => JSON.stringify({ analysisReport, beats: [beat] }),
       writeEpisodeMeta,
     })
 
@@ -92,5 +99,22 @@ describe('updateEpisodeMeta', () => {
     const saved = JSON.parse(savedJson)
     expect(saved.sceneMetrics).toEqual([sceneMetric])
     expect(saved.analysisReport.id).toBe('rpt_aaaaaaaaaaaa')
+    expect(saved.beats).toEqual([beat])
+  })
+
+  it('merges beats in without disturbing an existing analysisReport and sceneMetrics', async () => {
+    const writeEpisodeMeta = vi.fn(async (_fileName: string, _content: string) => {})
+    const fileSystem = fakeFileSystem({
+      readEpisodeMeta: async () => JSON.stringify({ analysisReport, sceneMetrics: [sceneMetric] }),
+      writeEpisodeMeta,
+    })
+
+    await updateEpisodeMeta(fileSystem, 'script.fountain', { beats: [beat] })
+
+    const [, savedJson] = writeEpisodeMeta.mock.calls[0]
+    const saved = JSON.parse(savedJson)
+    expect(saved.beats).toEqual([beat])
+    expect(saved.analysisReport.id).toBe('rpt_aaaaaaaaaaaa')
+    expect(saved.sceneMetrics).toEqual([sceneMetric])
   })
 })

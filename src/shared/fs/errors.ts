@@ -15,3 +15,11 @@ export class InvalidFountainFileNameError extends Error {
     this.name = 'InvalidFountainFileNameError'
   }
 }
+
+/** Thrown by `pickProjectFolder()` when the writer dismisses the Tauri folder dialog without choosing one. */
+export class ProjectFolderSelectionCancelledError extends Error {
+  constructor() {
+    super('No folder was selected.')
+    this.name = 'ProjectFolderSelectionCancelledError'
+  }
+}

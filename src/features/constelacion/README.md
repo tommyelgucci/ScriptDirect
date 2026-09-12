@@ -17,3 +17,12 @@ characters, edges = "shared a scene together"); the graph replaces/augments
 this view once built. No relationship data (`Relationship` entity) is wired
 up yet — that's what turns "shared a scene" co-occurrence into an actual
 edge with a type (Family/Friendship/Romance/Rivalry/...).
+
+## Character profile sliders
+
+Clicking a character's name expands `CharacterTraitsEditor.tsx`: three
+0-100 sliders (empathy, moral ambiguity, volatility — ROADMAP.md Phase 2+),
+hand-set by the writer and saved through `updateCharacterTraits.ts` into
+`characters.json`. Unlike `sceneIds`, these are never derived/auto-extracted
+— `syncCharacters.ts`'s merge already preserves them on every autosave since
+it spreads the existing character record.

@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
-import { characterSchema, type Character } from '../../entities/character'
+import { characterSchema, type Character, type CharacterTraits } from '../../entities/character'
 import { locationSchema, type Location } from '../../entities/location'
 import { useAppStore } from '../../shared/store/useAppStore'
+import { CharacterTraitsEditor } from './CharacterTraitsEditor'
 import './ConstelacionScreen.css'
+import { updateCharacterTraits } from './updateCharacterTraits'
 
 function sortBySceneCount<T extends { name: string; sceneIds: string[] }>(items: T[]): T[] {
   return [...items].sort((a, b) => b.sceneIds.length - a.sceneIds.length || a.name.localeCompare(b.name))
@@ -14,6 +16,7 @@ export function ConstelacionScreen() {
   const project = useAppStore((state) => state.project)
   const [characters, setCharacters] = useState<Character[] | null>(null)
   const [locations, setLocations] = useState<Location[] | null>(null)
+  const [expandedCharacterId, setExpandedCharacterId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!project) {
@@ -38,6 +41,15 @@ export function ConstelacionScreen() {
       cancelled = true
     }
   }, [project])
+
+  async function handleSaveTraits(characterId: string, traits: CharacterTraits) {
+    if (!project) {
+      return
+    }
+    const updated = await updateCharacterTraits(project.fileSystem, characterId, traits)
+    setCharacters(updated)
+    setExpandedCharacterId(null)
+  }
 
   if (!project) {
     return <Navigate to="/" replace />
@@ -69,11 +81,33 @@ export function ConstelacionScreen() {
             </thead>
             <tbody>
               {sortBySceneCount(characters).map((character) => (
-                <tr key={character.id}>
-                  <td>{character.name}</td>
-                  <td>{character.group}</td>
-                  <td>{character.sceneIds.length}</td>
-                </tr>
+                <Fragment key={character.id}>
+                  <tr>
+                    <td>
+                      <button
+                        type="button"
+                        className="constelacion-screen__name-button"
+                        onClick={() =>
+                          setExpandedCharacterId(expandedCharacterId === character.id ? null : character.id)
+                        }
+                      >
+                        {character.name}
+                      </button>
+                    </td>
+                    <td>{character.group}</td>
+                    <td>{character.sceneIds.length}</td>
+                  </tr>
+                  {expandedCharacterId === character.id && (
+                    <tr>
+                      <td colSpan={3}>
+                        <CharacterTraitsEditor
+                          character={character}
+                          onSave={(traits) => handleSaveTraits(character.id, traits)}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>

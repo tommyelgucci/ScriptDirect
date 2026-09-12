@@ -1,0 +1,75 @@
+.version-history-screen {
+  max-width: 48rem;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.version-history-screen__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.version-history-screen__loading,
+.version-history-screen__empty {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.version-history-screen__list {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+}
+
+.version-history-screen__list li {
+  border-bottom: 1px solid #333;
+  padding: 0.75rem 0;
+}
+
+.version-history-screen__entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.version-history-screen__label {
+  color: #888;
+}
+
+.version-history-screen__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.version-history-screen__actions button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.version-history-screen__diff {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(128, 128, 128, 0.08);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.version-history-screen__diff-added {
+  background: rgba(46, 125, 50, 0.25);
+  display: inline-block;
+  width: 100%;
+}
+
+.version-history-screen__diff-removed {
+  background: rgba(192, 57, 43, 0.25);
+  text-decoration: line-through;
+  display: inline-block;
+  width: 100%;
+}

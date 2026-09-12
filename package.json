@@ -12,12 +12,16 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "@tauri-apps/plugin-fs": "^2.5.2",
     "@tiptap/core": "^3.31.3",
     "@tiptap/extension-document": "^3.31.3",
     "@tiptap/extension-history": "^3.31.3",
     "@tiptap/extension-text": "^3.31.3",
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
+    "diff": "^9.0.0",
     "fountain-js": "^1.2.4",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.8",
@@ -28,6 +32,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",

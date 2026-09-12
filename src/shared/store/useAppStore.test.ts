@@ -9,6 +9,12 @@ function fakeFileSystem(): ProjectFileSystem {
     writeProjectJson: async () => {},
     readCharactersJson: async () => null,
     writeCharactersJson: async () => {},
+    readLocationsJson: async () => null,
+    writeLocationsJson: async () => {},
+    readVersionsIndexJson: async () => null,
+    writeVersionsIndexJson: async () => {},
+    readVersionFountain: async () => '',
+    writeVersionFountain: async () => {},
     listEpisodeFountainFileNames: async () => [],
     readEpisodeFountain: async () => '',
     writeEpisodeFountain: async () => {},
@@ -41,6 +47,21 @@ describe('useAppStore', () => {
     expect(useAppStore.getState().project).toEqual({ fileSystem, episodeFileName: 'script.fountain' })
 
     useAppStore.getState().closeProject()
+    expect(useAppStore.getState().project).toBeNull()
+  })
+
+  it('switches the open episode without reopening the folder', () => {
+    const fileSystem = fakeFileSystem()
+    useAppStore.getState().openProject({ fileSystem, episodeFileName: 's01e01.fountain' })
+
+    useAppStore.getState().setEpisodeFileName('s01e02.fountain')
+
+    expect(useAppStore.getState().project).toEqual({ fileSystem, episodeFileName: 's01e02.fountain' })
+    useAppStore.getState().closeProject()
+  })
+
+  it('does nothing when no project is open', () => {
+    useAppStore.getState().setEpisodeFileName('s01e02.fountain')
     expect(useAppStore.getState().project).toBeNull()
   })
 })

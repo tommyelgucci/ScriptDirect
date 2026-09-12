@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createId } from '../entities/id'
 import type { Project } from '../entities/project'
 import { projectSchema } from '../entities/project'
-import { FileSystemAccessUnsupportedError, pickProjectFolder } from '../shared/fs'
+import { FileSystemAccessUnsupportedError, pickProjectFolder, ProjectFolderSelectionCancelledError } from '../shared/fs'
 import { DEFAULT_EPISODE_FILE_NAME, useAppStore } from '../shared/store/useAppStore'
 import './HomeScreen.css'
 
@@ -43,9 +43,11 @@ export function HomeScreen() {
       }
 
       openProject({ fileSystem, episodeFileName: DEFAULT_EPISODE_FILE_NAME })
-      navigate('/editor')
+      navigate('/episodios')
     } catch (caught) {
-      if (caught instanceof FileSystemAccessUnsupportedError) {
+      if (caught instanceof ProjectFolderSelectionCancelledError) {
+        // The writer dismissed the folder dialog; nothing went wrong.
+      } else if (caught instanceof FileSystemAccessUnsupportedError) {
         setError(caught.message)
       } else {
         setError('No se pudo abrir la carpeta del proyecto.')

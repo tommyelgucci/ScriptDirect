@@ -1,6 +1,7 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { characterSchema } from '../../entities/character'
 import { createId } from '../../entities/id'
 import { locationSchema } from '../../entities/location'
@@ -95,5 +96,30 @@ describe('ConstelacionScreen', () => {
     expect(firstDataRow.getByText('3')).toBeInTheDocument()
 
     expect(screen.getByText('KITCHEN')).toBeInTheDocument()
+  })
+
+  it('expands a character to edit trait sliders and saves them', async () => {
+    const morty = characterSchema.parse({ id: createId('chr'), name: 'MORTY', group: 'protagonist', sceneIds: [] })
+    const writeCharactersJson = vi.fn(async (_content: string) => {})
+
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({
+        readCharactersJson: async () => JSON.stringify([morty]),
+        writeCharactersJson,
+      }),
+      episodeFileName: 'script.fountain',
+    })
+
+    renderConstelacionScreen()
+    await userEvent.click(await screen.findByRole('button', { name: 'MORTY' }))
+
+    const empathySlider = screen.getByRole('slider', { name: 'Empatía' })
+    fireEvent.change(empathySlider, { target: { value: '80' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(writeCharactersJson).toHaveBeenCalledTimes(1)
+    const saved = JSON.parse(writeCharactersJson.mock.calls[0][0])
+    expect(saved[0].traits.empathy).toBe(80)
   })
 })

@@ -170,6 +170,7 @@ export function EditorScreen() {
           {saveStatus === 'saved' && 'Guardado'}
           {saveStatus === 'error' && 'Error al guardar'}
         </span>
+        <Link to="/episodios">Episodios</Link>
         <Link to="/brujula">Brújula</Link>
         <Link to="/constelacion">Constelación</Link>
         <Link to="/ruta">Ruta</Link>

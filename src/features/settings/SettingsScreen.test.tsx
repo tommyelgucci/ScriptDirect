@@ -74,7 +74,7 @@ describe('SettingsScreen', () => {
     await userEvent.type(screen.getByLabelText('Clave de API'), 'sk-ant-test')
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
 
-    expect(readApiKey('anthropic')).toBe('sk-ant-test')
+    expect(await readApiKey('anthropic')).toBe('sk-ant-test')
     expect(screen.getByRole('status')).toHaveTextContent('Guardado')
   })
 

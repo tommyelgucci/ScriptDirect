@@ -11,8 +11,13 @@ BYOK AI provider adapters, per ARCHITECTURE.md's AI Provider Architecture.
   `aiProvider.provider`. Throws `UnsupportedAIProviderError` for `ollama`
   (a valid value in the data model, not yet wired to a real adapter or
   exposed in Settings).
-- `apiKeyStorage.ts` — reads/writes the BYOK key in `localStorage`, scoped
-  per provider. See its own doc comment for the security disclosure.
+- `apiKeyStorage.ts` — reads/writes the BYOK key: the OS keychain under the
+  Tauri desktop shell (via `tauriKeychain.ts` and the Rust commands in
+  `src-tauri/src/keychain.rs`), `localStorage` otherwise, scoped per
+  provider. See its own doc comment for the web build's security
+  disclosure.
+- `tauriKeychain.ts` — thin `invoke()` wrapper around the three
+  `keychain_*` Tauri commands. Only called when `isTauriRuntime()` is true.
 - `analysisPrompt.ts` / `parseAnalysisResponse.ts` — the shared prompt
   Brújula sends to whichever provider, and the shared parser that turns
   the response back into structured findings.

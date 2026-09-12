@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createId } from '../entities/id'
 import type { Project } from '../entities/project'
 import { projectSchema } from '../entities/project'
+import { safeParseJson } from '../shared/json/safeParseJson'
 import {
   FileSystemAccessUnsupportedError,
   needsZipFallback,
@@ -39,7 +40,7 @@ export function HomeScreen() {
       const existingJson = await fileSystem.readProjectJson()
 
       if (existingJson) {
-        const parsed = projectSchema.safeParse(JSON.parse(existingJson))
+        const parsed = safeParseJson(projectSchema, existingJson)
         if (!parsed.success) {
           setError('El archivo project.json de esta carpeta no es válido.')
           return
@@ -79,7 +80,7 @@ export function HomeScreen() {
         setError('Este .zip no contiene un proyecto de ScriptDirect (falta project.json).')
         return
       }
-      const parsed = projectSchema.safeParse(JSON.parse(existingJson))
+      const parsed = safeParseJson(projectSchema, existingJson)
       if (!parsed.success) {
         setError('El archivo project.json de este .zip no es válido.')
         return

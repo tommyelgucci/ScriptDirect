@@ -7,6 +7,7 @@ import { readApiKey } from '../../shared/ai/apiKeyStorage'
 import { createAIProvider } from '../../shared/ai/createAIProvider'
 import { readEpisodeMeta, updateEpisodeMeta } from '../../shared/fs/episodeMeta'
 import { parseFountainDocument } from '../../shared/fountain'
+import { safeParseJson } from '../../shared/json/safeParseJson'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { buildSceneMetrics } from './buildSceneMetrics'
 import './PulsoScreen.css'
@@ -75,7 +76,7 @@ export function PulsoScreen() {
     setIsAnalyzing(true)
     try {
       const projectJson = await project.fileSystem.readProjectJson()
-      const parsedProject = projectJson ? projectSchema.safeParse(JSON.parse(projectJson)) : null
+      const parsedProject = projectJson ? safeParseJson(projectSchema, projectJson) : null
       const aiProvider = parsedProject?.success ? parsedProject.data.aiProvider : undefined
       if (!aiProvider) {
         setErrorMessage('Configura un proveedor de IA en Configuración antes de analizar.')

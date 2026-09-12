@@ -3,6 +3,7 @@ import { characterSchema, type Character } from '../../entities/character'
 import { createId } from '../../entities/id'
 import type { ParsedScene } from '../../shared/fountain'
 import type { ProjectFileSystem } from '../../shared/fs/types'
+import { safeParseJson } from '../../shared/json/safeParseJson'
 
 const CHARACTER_EXTENSION_PATTERN = /\s*\([^)]*\)\s*$/
 
@@ -70,7 +71,7 @@ export async function syncCharacters(fileSystem: ProjectFileSystem, scenes: Pars
   const existingJson = await fileSystem.readCharactersJson()
   let existing: Character[] = []
   if (existingJson) {
-    const parsed = z.array(characterSchema).safeParse(JSON.parse(existingJson))
+    const parsed = safeParseJson(z.array(characterSchema), existingJson)
     if (parsed.success) {
       existing = parsed.data
     } else {

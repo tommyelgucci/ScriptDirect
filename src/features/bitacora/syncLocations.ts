@@ -3,6 +3,7 @@ import { locationSchema, type Location } from '../../entities/location'
 import { createId } from '../../entities/id'
 import type { ParsedScene } from '../../shared/fountain'
 import type { ProjectFileSystem } from '../../shared/fs/types'
+import { safeParseJson } from '../../shared/json/safeParseJson'
 
 const SCENE_HEADING_PREFIX = /^\s*(?:int\.?\s*\/\s*ext\.?|i\.?\s*\/\s*e\.?|int\.?|ext\.?|est\.?)[.\s]+/i
 
@@ -69,7 +70,7 @@ export async function syncLocations(fileSystem: ProjectFileSystem, scenes: Parse
   const existingJson = await fileSystem.readLocationsJson()
   let existing: Location[] = []
   if (existingJson) {
-    const parsed = z.array(locationSchema).safeParse(JSON.parse(existingJson))
+    const parsed = safeParseJson(z.array(locationSchema), existingJson)
     if (parsed.success) {
       existing = parsed.data
     } else {

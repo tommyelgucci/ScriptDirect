@@ -67,6 +67,24 @@ describe('ConstelacionScreen', () => {
     expect(screen.getByText('Todavía no hay locaciones.')).toBeInTheDocument()
   })
 
+  // Codex's review (PR #3, #13) flagged that JSON.parse throwing on
+  // syntactically invalid (not just schema-invalid) JSON crashed the screen
+  // instead of falling back to the empty state.
+  it('shows empty states instead of crashing when characters.json or locations.json is malformed', async () => {
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({
+        readCharactersJson: async () => '{"truncated',
+        readLocationsJson: async () => '{"truncated',
+      }),
+      episodeFileName: 'script.fountain',
+    })
+
+    renderConstelacionScreen()
+
+    expect(await screen.findByText('Todavía no hay personajes.')).toBeInTheDocument()
+    expect(screen.getByText('Todavía no hay locaciones.')).toBeInTheDocument()
+  })
+
   it('renders characters and locations sorted by scene count, most-appeared first', async () => {
     const morty = characterSchema.parse({
       id: createId('chr'),

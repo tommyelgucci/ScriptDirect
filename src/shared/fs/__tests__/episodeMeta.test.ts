@@ -60,6 +60,17 @@ describe('readEpisodeMeta', () => {
     expect(meta).toEqual({ analysisReport: null, sceneMetrics: [], beats: [] })
   })
 
+  // Codex's review (PRs #5, #7, #16, #19) flagged that JSON.parse throwing on
+  // syntactically invalid (not just schema-invalid) JSON skipped this same
+  // fallback and crashed instead.
+  it('returns schema defaults when the sidecar file is truncated/malformed JSON', async () => {
+    const meta = await readEpisodeMeta(
+      fakeFileSystem({ readEpisodeMeta: async () => '{"sceneMetrics": [' }),
+      'script.fountain',
+    )
+    expect(meta).toEqual({ analysisReport: null, sceneMetrics: [], beats: [] })
+  })
+
   it('parses an existing sidecar file', async () => {
     const meta = await readEpisodeMeta(
       fakeFileSystem({ readEpisodeMeta: async () => JSON.stringify({ sceneMetrics: [sceneMetric], beats: [beat] }) }),

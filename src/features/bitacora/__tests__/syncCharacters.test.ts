@@ -119,4 +119,18 @@ describe('syncCharacters', () => {
     await expect(syncCharacters(fileSystem, parseFountainDocument(SCRIPT))).resolves.toBeUndefined()
     expect(writeCharactersJson).toHaveBeenCalledTimes(1)
   })
+
+  // Codex's review (PR #3, #13) flagged that JSON.parse throwing on
+  // syntactically invalid (not just schema-invalid) JSON made every autosave
+  // reject instead of following this same fresh-start fallback.
+  it('starts fresh instead of throwing when characters.json is truncated/malformed JSON', async () => {
+    const writeCharactersJson = vi.fn(async (_content: string) => {})
+    const fileSystem = fakeFileSystem({
+      readCharactersJson: async () => '{"truncated',
+      writeCharactersJson,
+    })
+
+    await expect(syncCharacters(fileSystem, parseFountainDocument(SCRIPT))).resolves.toBeUndefined()
+    expect(writeCharactersJson).toHaveBeenCalledTimes(1)
+  })
 })

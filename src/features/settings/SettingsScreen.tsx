@@ -4,6 +4,7 @@ import type { AiProviderName } from '../../entities/project'
 import { projectSchema } from '../../entities/project'
 import { readApiKey, writeApiKey } from '../../shared/ai/apiKeyStorage'
 import { isTauriRuntime } from '../../shared/fs/capability'
+import { safeParseJson } from '../../shared/json/safeParseJson'
 import { useAppStore } from '../../shared/store/useAppStore'
 import './SettingsScreen.css'
 
@@ -72,7 +73,7 @@ export function SettingsScreen() {
       if (cancelled || !json) {
         return
       }
-      const parsed = projectSchema.safeParse(JSON.parse(json))
+      const parsed = safeParseJson(projectSchema, json)
       if (parsed.success && parsed.data.aiProvider) {
         await applyProvider(
           parsed.data.aiProvider.provider,

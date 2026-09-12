@@ -1,4 +1,5 @@
 import { episodeMetaSchema, type EpisodeMeta } from '../../entities/episode-meta'
+import { safeParseJson } from '../json/safeParseJson'
 import type { ProjectFileSystem } from './types'
 
 /** Parses an episode's sidecar meta file, defaulting every field when it doesn't exist yet. */
@@ -10,7 +11,7 @@ export async function readEpisodeMeta(
   if (!json) {
     return episodeMetaSchema.parse({})
   }
-  const parsed = episodeMetaSchema.safeParse(JSON.parse(json))
+  const parsed = safeParseJson(episodeMetaSchema, json)
   return parsed.success ? parsed.data : episodeMetaSchema.parse({})
 }
 

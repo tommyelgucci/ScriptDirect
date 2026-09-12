@@ -14,3 +14,12 @@ export const blockSchema = z.object({
   text: z.string(),
 })
 export type Block = z.infer<typeof blockSchema>
+
+/**
+ * Character, Parenthetical, and Dialogue blocks stay adjacent — no blank
+ * line — when they continue the same dialogue exchange. Shared by the
+ * Fountain serializer (fountainTiptap.ts) and the PDF exporter so the two
+ * renderings of "is this block part of the same chunk as the previous
+ * one" never drift apart.
+ */
+export const DIALOGUE_CONTINUATION_BLOCK_TYPES = new Set<BlockType>(['character', 'parenthetical', 'dialogue'])

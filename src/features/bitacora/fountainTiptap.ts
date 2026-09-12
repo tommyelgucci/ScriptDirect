@@ -1,5 +1,5 @@
 import type { JSONContent } from '@tiptap/core'
-import type { Block, BlockType } from '../../entities/block'
+import { DIALOGUE_CONTINUATION_BLOCK_TYPES, type Block, type BlockType } from '../../entities/block'
 import type { ParsedScene } from '../../shared/fountain'
 import { formatSceneIdNote } from '../../shared/fountain'
 
@@ -26,8 +26,6 @@ function blockToNode(block: Block, sceneId: string | null): JSONContent {
   }
 }
 
-const DIALOGUE_CONTINUATION_TYPES = new Set<BlockType>(['character', 'parenthetical', 'dialogue'])
-
 /**
  * Serializes a Tiptap document back to Fountain text, isolating each
  * heading's scene-id note with blank lines on both sides (required for
@@ -45,7 +43,7 @@ export function tiptapDocToFountainText(doc: JSONContent): string {
     const previous = nodes[index - 1]
     const continuesDialogueBlock =
       previous !== undefined &&
-      DIALOGUE_CONTINUATION_TYPES.has(previous.type as BlockType) &&
+      DIALOGUE_CONTINUATION_BLOCK_TYPES.has(previous.type as BlockType) &&
       (node.type === 'parenthetical' || node.type === 'dialogue')
 
     if (index > 0 && !continuesDialogueBlock) {

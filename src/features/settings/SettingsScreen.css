@@ -1,0 +1,57 @@
+.settings-screen {
+  max-width: 32rem;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.settings-screen__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.settings-screen section {
+  margin-top: 2rem;
+}
+
+.settings-screen__disclosure {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.settings-screen label {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.settings-screen input,
+.settings-screen select {
+  display: block;
+  margin-top: 0.25rem;
+  width: 100%;
+  padding: 0.4rem;
+}
+
+.settings-screen [role='radiogroup'] label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: auto;
+  margin-right: 1.5rem;
+}
+
+.settings-screen [role='radiogroup'] input {
+  width: auto;
+  margin: 0;
+}
+
+.settings-screen button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.settings-screen [role='status'] {
+  margin-left: 0.75rem;
+  color: #2e7d32;
+}

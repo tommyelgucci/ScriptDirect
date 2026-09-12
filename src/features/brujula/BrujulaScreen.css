@@ -1,0 +1,70 @@
+.brujula-screen {
+  max-width: 42rem;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.brujula-screen__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.brujula-screen button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.brujula-screen__error {
+  margin-top: 1rem;
+  color: #c0392b;
+}
+
+.brujula-screen__empty {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.brujula-screen__report section {
+  margin-top: 2rem;
+}
+
+.brujula-screen__report ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.finding {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #333;
+}
+
+.finding--accepted {
+  opacity: 0.6;
+}
+
+.finding--dismissed {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.finding__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.finding__actions button {
+  margin: 0;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.finding__actions button[aria-pressed='true'] {
+  font-weight: bold;
+}

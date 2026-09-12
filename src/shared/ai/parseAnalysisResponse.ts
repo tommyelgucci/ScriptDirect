@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { extractJson } from './extractJson'
 import type { AnalysisSections } from './types'
 
 const analysisSectionsSchema = z.object({
@@ -13,20 +14,6 @@ export class InvalidAnalysisResponseError extends Error {
     super('The AI provider did not return a valid analysis. Try again.')
     this.name = 'InvalidAnalysisResponseError'
   }
-}
-
-/** Pulls the JSON object out of a fenced code block, or the outermost {...} span, or the raw text as-is. */
-function extractJson(text: string): string {
-  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text)
-  if (fenced) {
-    return fenced[1].trim()
-  }
-  const firstBrace = text.indexOf('{')
-  const lastBrace = text.lastIndexOf('}')
-  if (firstBrace !== -1 && lastBrace > firstBrace) {
-    return text.slice(firstBrace, lastBrace + 1)
-  }
-  return text.trim()
 }
 
 export function parseAnalysisResponse(rawText: string): AnalysisSections {

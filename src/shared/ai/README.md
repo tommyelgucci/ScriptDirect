@@ -15,9 +15,18 @@ BYOK AI provider adapters, per ARCHITECTURE.md's AI Provider Architecture.
   per provider. See its own doc comment for the security disclosure.
 - `analysisPrompt.ts` / `parseAnalysisResponse.ts` — the shared prompt
   Brújula sends to whichever provider, and the shared parser that turns
-  the response back into structured findings (tolerant of a raw JSON
-  object, one wrapped in a markdown code fence, or one surrounded by
-  other prose — models don't always follow "JSON only" exactly).
+  the response back into structured findings.
+- `sceneMetricsPrompt.ts` / `parseSceneMetricsResponse.ts` — Pulso's
+  equivalent, asking for a JSON array scoring every scene. Scene alignment
+  reuses the script's own `[[id:scn_xxxx]]` notes: the prompt asks the
+  model to copy each id exactly, so the response can be matched back to
+  real scenes without any separate indexing scheme. The caller (not this
+  module) is responsible for dropping any entry whose `sceneId` doesn't
+  match an actual scene — a defense against the model inventing one.
+- `extractJson.ts` — shared by both parsers: pulls a JSON object or array
+  out of a markdown code fence, the outermost `{...}`/`[...]` span, or the
+  raw text as-is (tolerant of prose around it — models don't always follow
+  "JSON only" exactly).
 
 ## Testing limitation
 

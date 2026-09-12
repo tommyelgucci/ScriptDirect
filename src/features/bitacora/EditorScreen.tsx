@@ -173,6 +173,7 @@ export function EditorScreen() {
         <Link to="/episodios">Episodios</Link>
         <Link to="/brujula">Brújula</Link>
         <Link to="/constelacion">Constelación</Link>
+        <Link to="/pulso">Pulso</Link>
         <Link to="/historial">Historial</Link>
         <Link to="/settings">Configuración</Link>
         <button type="button" onClick={handleSaveVersion}>

@@ -1,0 +1,30 @@
+.pulso-screen {
+  max-width: 48rem;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.pulso-screen__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.pulso-screen button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.pulso-screen__error {
+  margin-top: 1rem;
+  color: #c0392b;
+}
+
+.pulso-screen__empty {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.pulso-screen__chart {
+  margin-top: 2rem;
+}

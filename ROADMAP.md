@@ -48,6 +48,41 @@ differentiators (Spanish-first, local-first, BYOK) is deferred.
 6. **Multi-episode / season support** (MVP is single-script)
 7. **Character profile sliders** (empathy, moral ambiguity, volatility, etc.)
 
+## Competitive landscape check (2026-09-12)
+
+A screenwriter (Antonio Orozco Garcin, unaffiliated) posted a 2+ year, close-
+to-beta screenwriting tool in a Facebook screenwriter group, aimed at the
+same audience with the same "AI assists, human keeps IP control" framing
+as this project's Vision statement. Worth being honest about which of
+`ARCHITECTURE.md`'s Differentiators still hold up against it, based only on
+what's visible in his public posts/screenshots/comments — no access to his
+actual code:
+
+| Differentiator | Status | Evidence |
+|---|---|---|
+| Spanish-first market | **Neutralized** | His UI ships in Spanish (and English); marketed directly in a Spanish-language screenwriter community. |
+| Local-first / offline | **Neutralized** | His own words: "es offline y no hay nube... se requiere intervención humana todo el tiempo para tener la propiedad intelectual completa." |
+| BYOK | **Neutralized** | His own words: "puedes configurar tus ias personales o las que tu consideres por API." |
+| No vendor lock-in (Fountain) | **Unconfirmed either way** | No screenshot shows his storage format. The one differentiator we can still credibly claim, but unverified that he lacks it too. |
+| Pulso (per-scene emotional/tension metrics) | **Neutralized, arguably surpassed** | His "Analysis" screen already charts Emotional Intensity, Attention Capture, Dramatic Tension, and "Potencial Comercial" per scene, plus an emotion-palette timeline — more metrics than Pulso ships today. |
+
+Also already matched by his tool, beyond the original differentiator list:
+multi-episode/season structure (his version dropdown lists episodes per
+season the same way), and version control with named snapshots and a
+compare-versions view (more built-out than our version-history feature).
+
+**Conclusion:** most of the original differentiator list no longer holds as
+unique — it describes what a working product in this space needs to have,
+not what makes this one different. Before investing further in feature
+parity, the honest options are: (a) find and validate a real, distinct
+wedge (Fountain/open-format interop is the only unverified candidate left;
+true native desktop distribution via Tauri, vs. his browser-installable
+PWA, is another untested one), or (b) accept this is now a race decided by
+execution and timing rather than unique features, and decide deliberately
+whether that's still worth it. Not decided yet — flagging it so the next
+session doesn't keep building against a differentiator list that's already
+stale.
+
 ## Explicitly out of scope for now
 
 - Multi-user collaboration

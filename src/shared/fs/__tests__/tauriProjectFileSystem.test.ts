@@ -103,4 +103,26 @@ describe('TauriProjectFileSystem', () => {
       new TauriProjectFileSystem('/root').readVersionFountain('s01e01.fountain', '2026-01-01.fountain'),
     ).rejects.toMatchObject({ name: 'NotFoundError' })
   })
+
+  // Codex's review flagged that a versionFileName read back from a
+  // corrupted/tampered versions/index.json flows straight into join() here,
+  // and this fs plugin has an fs:scope of "**" — no OS sandbox of its own.
+  it('refuses a version file name that escapes the versions directory', async () => {
+    const fileSystem = new TauriProjectFileSystem('/root')
+
+    await expect(fileSystem.readVersionFountain('s01e01.fountain', '../../../../etc/passwd')).rejects.toMatchObject({
+      name: 'UnsafeFileNameError',
+    })
+    await expect(fileSystem.writeVersionFountain('s01e01.fountain', '../evil.fountain', 'x')).rejects.toMatchObject({
+      name: 'UnsafeFileNameError',
+    })
+    expect(readTextFile).not.toHaveBeenCalled()
+    expect(writeTextFile).not.toHaveBeenCalled()
+  })
+
+  it('refuses an absolute-looking version file name', async () => {
+    await expect(
+      new TauriProjectFileSystem('/root').readVersionFountain('s01e01.fountain', '/etc/passwd'),
+    ).rejects.toMatchObject({ name: 'UnsafeFileNameError' })
+  })
 })

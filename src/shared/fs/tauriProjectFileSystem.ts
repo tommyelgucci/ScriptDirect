@@ -1,6 +1,7 @@
 import { join } from '@tauri-apps/api/path'
 import { exists, mkdir, readDir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs'
 import { episodeBaseName, metaFileNameFor } from './fountainFileName'
+import { assertSafeFileName } from './safeFileName'
 import type { ProjectFileSystem } from './types'
 
 const PROJECT_JSON = 'project.json'
@@ -138,6 +139,7 @@ export class TauriProjectFileSystem implements ProjectFileSystem {
   }
 
   async readVersionFountain(fountainFileName: string, versionFileName: string): Promise<string> {
+    assertSafeFileName(versionFileName)
     const dir = await this.versionsDir(fountainFileName, false)
     const content = await readFileIfExists(await join(dir, versionFileName))
     if (content === null) {
@@ -147,6 +149,7 @@ export class TauriProjectFileSystem implements ProjectFileSystem {
   }
 
   async writeVersionFountain(fountainFileName: string, versionFileName: string, content: string): Promise<void> {
+    assertSafeFileName(versionFileName)
     const dir = await this.versionsDir(fountainFileName, true)
     await writeTextFile(await join(dir, versionFileName), content)
   }

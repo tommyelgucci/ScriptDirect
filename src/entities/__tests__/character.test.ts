@@ -33,4 +33,36 @@ describe('characterSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  it('accepts a character with trait sliders set', () => {
+    const result = characterSchema.safeParse({
+      id: createId('chr'),
+      name: 'Morty',
+      group: 'protagonist',
+      traits: { empathy: 80, moralAmbiguity: 30, volatility: 60 },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('leaves traits undefined when not provided', () => {
+    const result = characterSchema.safeParse({
+      id: createId('chr'),
+      name: 'Morty',
+      group: 'protagonist',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.traits).toBeUndefined()
+    }
+  })
+
+  it('rejects a trait score outside 0-100', () => {
+    const result = characterSchema.safeParse({
+      id: createId('chr'),
+      name: 'Morty',
+      group: 'protagonist',
+      traits: { empathy: 150 },
+    })
+    expect(result.success).toBe(false)
+  })
 })

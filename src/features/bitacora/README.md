@@ -17,6 +17,16 @@ Bitácora — screenplay block editor (Writing Desk equivalent).
 - `saveDoc.ts` — serializes the doc back to Fountain (running
   `ensureSceneIds` first) and writes it through `ProjectFileSystem`.
 - `SceneSidebar.tsx` / `sceneList.ts` — scene list with click-to-navigate.
+- `syncCharacters.ts` / `syncLocations.ts` — auto-extraction into
+  `characters.json` / `locations.json` on every save (see their own doc
+  comments).
+- `versionHistory.ts` / `VersionHistoryScreen.tsx` (`/historial`) — "Guardar
+  versión" snapshots the current script under `versions/<script base
+  name>/`; the history screen lists snapshots, shows a line diff against
+  the current script, and restores one (auto-snapshotting the current
+  script first, so restoring never loses work). Uses a lightweight
+  `versionEntrySchema`, not `entities/version.ts`'s `Version` — see that
+  file's doc comment for why.
 
 ## Known simplifications (MVP scope, not full Final Draft parity)
 

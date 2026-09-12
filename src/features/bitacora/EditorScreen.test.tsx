@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ZipProjectFileSystem } from '../../shared/fs'
 import type { ProjectFileSystem } from '../../shared/fs/types'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { EditorScreen } from './EditorScreen'
@@ -17,6 +18,8 @@ function fakeFileSystem(overrides: Partial<ProjectFileSystem> = {}): ProjectFile
     writeCharactersJson: async () => {},
     readLocationsJson: async () => null,
     writeLocationsJson: async () => {},
+    readCuadernoJson: async () => null,
+    writeCuadernoJson: async () => {},
     readVersionsIndexJson: async () => null,
     writeVersionsIndexJson: async () => {},
     readVersionFountain: async () => '',
@@ -176,5 +179,57 @@ describe('EditorScreen', () => {
     expect(writeVersionFountain).not.toHaveBeenCalled()
 
     vi.restoreAllMocks()
+  })
+})
+
+describe('EditorScreen — ZIP export', () => {
+  beforeEach(() => {
+    useAppStore.getState().closeProject()
+  })
+
+  afterEach(() => {
+    useAppStore.getState().closeProject()
+    vi.restoreAllMocks()
+  })
+
+  it('does not show the "Exportar .zip" button for a non-ZIP project', async () => {
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({ readEpisodeFountain: async () => '' }),
+      episodeFileName: 'script.fountain',
+    })
+
+    renderEditorScreen()
+
+    expect(await screen.findByRole('button', { name: /exportar pdf/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /exportar \.zip/i })).not.toBeInTheDocument()
+  })
+
+  it('exports the current in-memory project as a downloadable .zip that round-trips', async () => {
+    let capturedBlob: Blob | null = null
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      capturedBlob = blob
+      return 'blob:mock-url'
+    })
+    URL.revokeObjectURL = vi.fn()
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      expect(this.download).toBe('Zip Project.zip')
+    })
+
+    const fileSystem = ZipProjectFileSystem.createEmpty('Zip Project')
+    await fileSystem.writeProjectJson('{"id":"proj_1"}')
+    await fileSystem.writeEpisodeFountain('script.fountain', 'INT. KITCHEN - DAY\n\nAction line.')
+    useAppStore.getState().openProject({ fileSystem, episodeFileName: 'script.fountain' })
+
+    renderEditorScreen()
+    await userEvent.click(await screen.findByRole('button', { name: /exportar \.zip/i }))
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(capturedBlob).not.toBeNull()
+    expect(capturedBlob!.type).toBe('application/zip')
+
+    const bytes = new Uint8Array(await capturedBlob!.arrayBuffer())
+    const reimported = await ZipProjectFileSystem.importZip(bytes, 'Zip Project')
+    expect(await reimported.readProjectJson()).toBe('{"id":"proj_1"}')
+    expect(await reimported.readEpisodeFountain('script.fountain')).toContain('Action line.')
   })
 })

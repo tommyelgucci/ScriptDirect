@@ -17,6 +17,7 @@ export type IdPrefix =
   | 'rpt'
   | 'fnd'
   | 'ver'
+  | 'doc'
 
 const ID_BODY_LENGTH = 12
 const ID_BODY_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'

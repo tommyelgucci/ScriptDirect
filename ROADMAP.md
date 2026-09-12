@@ -47,6 +47,15 @@ differentiators (Spanish-first, local-first, BYOK) is deferred.
 5. **Version history / compare versions**
 6. **Multi-episode / season support** (MVP is single-script)
 7. **Character profile sliders** (empathy, moral ambiguity, volatility, etc.)
+8. **ZIP import/export fallback** for Safari/Firefox (no File System Access
+   API there) — degraded relative to Tauri/Chromium: the whole project
+   lives in memory, the writer must explicitly export after each session
+9. **Cuaderno** (development documents) — free-form per-project notes
+   (title + plain text body), same `cuaderno.json` sidecar pattern as
+   characters.json/locations.json. First version: create, edit, delete;
+   no rich formatting, no per-document type system. Named in
+   `ARCHITECTURE.md`'s feature table since the start but never phased in
+   here until now.
 
 ## Competitive landscape check (2026-09-12)
 

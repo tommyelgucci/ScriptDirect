@@ -2,6 +2,56 @@
 
 Session log and recent decisions. Newest entries on top.
 
+## 2026-09-12 — Real Tauri build verified; ZIP fallback and a first Cuaderno shipped
+
+Continuing on `claude/session-work`. Went through everything that was
+flagged as remaining, easiest to hardest:
+
+**Tauri: verified with an actual `pnpm tauri build`, not just `cargo
+check`.** This sandbox was missing `libgtk-3-dev`/`libwebkit2gtk-4.1-dev`
+(needed to compile Tauri's Linux backend at all); installed them and got
+a real release build: `.deb`, `.rpm`, and `.AppImage` all produced with
+zero compiler warnings. Launched the resulting binary under Xvfb (no
+real display here) — it started and stayed up 10s with no panic, only
+expected `libEGL`/DRI3 warnings from having no GPU. Still unverified:
+actual UI interaction (no display) and the OS keychain round-trip (no
+keyring daemon) — both need a real machine.
+
+**Found a real bug via real-browser testing (Playwright + the
+pre-installed Chromium), not caught by tsc or the test suite:** the
+English toggle in Configuración changes `uiLanguage` state but no UI
+string anywhere actually reads it — every label stays in Spanish. Not
+fixed yet (it's a project-wide i18n gap, not a one-file fix); flagging
+here so it doesn't get lost. Worth deciding priority on separately.
+
+**ZIP import/export fallback for Safari/Firefox — done.** Closed the
+TODO in `shared/fs/README.md`. `ZipProjectFileSystem` holds a project
+in memory; `HomeScreen` offers import/create instead of the folder
+picker when `needsZipFallback()`; `EditorScreen` gets an "Exportar .zip
+(guardar)" button that flushes the pending autosave first. Verified with
+a real full round trip in Chromium (simulating Safari by deleting
+`window.showDirectoryPicker`): typed a real scene, exported, unzipped
+the actual downloaded file and confirmed the content and folder layout,
+then re-imported that same file through the UI and confirmed the
+episode was still there.
+
+**Cuaderno (development documents) — first version shipped.** Named in
+`ARCHITECTURE.md` since the start, never phased into `ROADMAP.md`, zero
+code until now. Free-form per-project notes (title + plain text),
+stored the same way as characters.json/locations.json. Required
+extending `ProjectFileSystem` with `readCuadernoJson`/`writeCuadernoJson`
+and updating all 15 `fakeFileSystem` test helpers across the suite —
+same ripple locations.json caused when it was added. Verified in a real
+browser: create, edit, persist across navigation, delete.
+
+280 tests pass (up from 251 at the top of this session), lint clean,
+`tsc -b` clean, production build succeeds throughout.
+
+**What's left, roughly easiest to hardest:** the i18n gap just found;
+deciding on the differentiator question from the competitive-landscape
+entry below; genuine device testing for Tauri (real OS, real keychain,
+real screen).
+
 ## 2026-09-12 — Tauri OS keychain done; competitive landscape flagged; work now on a branch
 
 Two things since the previous entry, both on `claude/session-work` (not

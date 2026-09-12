@@ -1,0 +1,84 @@
+.cuaderno-screen {
+  max-width: 64rem;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.cuaderno-screen__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.cuaderno-screen__body {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.cuaderno-screen__sidebar {
+  flex: 0 0 16rem;
+}
+
+.cuaderno-screen__empty {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.cuaderno-screen__list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.cuaderno-screen__list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.25rem;
+}
+
+.cuaderno-screen__list-item--active {
+  font-weight: bold;
+}
+
+.cuaderno-screen__create label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.cuaderno-screen__create input {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.cuaderno-screen__editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cuaderno-screen__title-input {
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.cuaderno-screen__editor textarea {
+  flex: 1;
+  min-height: 24rem;
+  padding: 0.75rem;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.cuaderno-screen__delete {
+  align-self: flex-start;
+  margin-top: 0.75rem;
+  color: #c0392b;
+}

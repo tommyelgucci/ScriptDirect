@@ -30,6 +30,13 @@ export interface ProjectFileSystem {
   readLocationsJson(): Promise<string | null>
   writeLocationsJson(content: string): Promise<void>
 
+  /**
+   * Cuaderno (development documents) — same "JSON array sidecar at the
+   * project root" pattern as characters.json/locations.json.
+   */
+  readCuadernoJson(): Promise<string | null>
+  writeCuadernoJson(content: string): Promise<void>
+
   /** File names as they appear on disk, e.g. ["s01e10.fountain"]. */
   listEpisodeFountainFileNames(): Promise<string[]>
   readEpisodeFountain(fountainFileName: string): Promise<string>

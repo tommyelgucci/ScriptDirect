@@ -31,10 +31,18 @@ episode `.meta.json` files.
 
 - `pickProjectFolder()` — opens the browser folder picker and returns a
   `ProjectFileSystem` for the chosen folder.
-- `ChromiumProjectFileSystem` — the only implementation today, built on the
-  File System Access API (Chrome/Edge only).
-- `isFileSystemAccessSupported()` — feature-detects the API so callers can
-  show a clear message instead of a crash on unsupported browsers.
+- `ChromiumProjectFileSystem` — built on the File System Access API
+  (Chrome/Edge only); the writer's edits live on real disk the whole time.
+- `TauriProjectFileSystem` — the desktop shell's fs plugin; also real disk,
+  any OS.
+- `ZipProjectFileSystem` — the Safari/Firefox fallback (see below); the
+  whole project lives in memory instead, so it needs an explicit
+  export/import step where the other two don't.
+- `isFileSystemAccessSupported()` / `isTauriRuntime()` / `needsZipFallback()`
+  — feature detection so callers (see `HomeScreen`) pick the right one of
+  the three above instead of crashing on an unsupported browser.
+- `pickProjectZipFile()` — opens a native file picker filtered to `.zip`,
+  for importing a project saved by `ZipProjectFileSystem.exportZip()`.
 - `episodeMeta.ts` — `readEpisodeMeta`/`updateEpisodeMeta`, a read-merge-write
   helper around `ProjectFileSystem.readEpisodeMeta`/`writeEpisodeMeta`.
   Brújula's `analysisReport`, Pulso's `sceneMetrics`, and Ruta's `beats`
@@ -44,12 +52,15 @@ episode `.meta.json` files.
   should go through `updateEpisodeMeta` rather than calling
   `writeEpisodeMeta` directly.
 
-## TODO: Safari/Firefox fallback
+## Safari/Firefox: the ZIP fallback is degraded, not equivalent
 
-Neither browser implements the File System Access API. `pickProjectFolder()`
-throws `FileSystemAccessUnsupportedError` there today rather than silently
-failing. Per `ARCHITECTURE.md`, the planned fix is a ZIP import/export
-fallback (download a `.zip` of the project folder, re-upload to continue
-editing) — not implemented yet. This is also the main argument in
-`ARCHITECTURE.md` for prioritizing the Tauri desktop build in Phase 2+,
-which sidesteps the browser limitation entirely via the Tauri fs API.
+Neither browser implements the File System Access API, so there is no live
+folder to read from or autosave to. `ZipProjectFileSystem` holds the whole
+project as an in-memory path → text map instead: `importZip()` unzips a
+previously exported project back into that map, and `exportZip()` (wired to
+the "Exportar .zip (guardar)" button in `EditorScreen`, Safari/Firefox only)
+is the writer's *only* way to persist — closing the tab without exporting
+loses everything since the last export, unlike the other two
+implementations. `HomeScreen` shows an explicit warning about this and
+suggests the Tauri desktop build for real autosave-to-disk, which is the
+main argument in `ARCHITECTURE.md` for prioritizing Tauri in Phase 2+.

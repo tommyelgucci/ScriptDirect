@@ -21,12 +21,10 @@ async function pickTauriProjectFolder(): Promise<ProjectFileSystem> {
  * there (see ARCHITECTURE.md's Platform Strategy — this is what sidesteps
  * the File System Access API's Chromium-only limitation), otherwise the
  * browser's File System Access API. Throws `FileSystemAccessUnsupportedError`
- * in browsers without that API (Safari, Firefox).
- *
- * TODO(Phase 2+): add a ZIP import/export fallback for those browsers, per
- * ARCHITECTURE.md's "Known limitation" note — not implemented yet. Until
- * then, `src/features/settings` should surface this error as a clear
- * "not yet supported in this browser" message rather than a crash.
+ * in browsers without that API (Safari, Firefox) — callers should check
+ * `needsZipFallback()` first and offer `ZipProjectFileSystem` /
+ * `pickProjectZipFile()` there instead, as `HomeScreen` does; this error
+ * exists as a defensive fallback, not the primary path for those browsers.
  */
 export async function pickProjectFolder(): Promise<ProjectFileSystem> {
   if (isTauriRuntime()) {

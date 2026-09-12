@@ -11,6 +11,7 @@ import { scenesToTiptapDoc, tiptapDocToFountainText } from './fountainTiptap'
 import { saveDoc } from './saveDoc'
 import { extractSceneList } from './sceneList'
 import { SceneSidebar } from './SceneSidebar'
+import { createVersionSnapshot } from './versionHistory'
 
 const AUTOSAVE_DELAY_MS = 800
 
@@ -114,6 +115,18 @@ export function EditorScreen() {
     downloadBlob(bytes, `${project.fileSystem.projectName}.pdf`, 'application/pdf')
   }, [project, content])
 
+  const handleSaveVersion = useCallback(async () => {
+    if (!project || !content) {
+      return
+    }
+    const promptResult = window.prompt('Etiqueta para esta versión (opcional):')
+    if (promptResult === null) {
+      return // user cancelled
+    }
+    const text = ensureSceneIds(tiptapDocToFountainText(content))
+    await createVersionSnapshot(project.fileSystem, project.episodeFileName, text, promptResult.trim() || undefined)
+  }, [project, content])
+
   const handleSelectScene = useCallback((sceneId: string) => {
     const editor = editorRef.current
     if (!editor) {
@@ -158,7 +171,12 @@ export function EditorScreen() {
           {saveStatus === 'error' && 'Error al guardar'}
         </span>
         <Link to="/brujula">Brújula</Link>
+        <Link to="/constelacion">Constelación</Link>
+        <Link to="/historial">Historial</Link>
         <Link to="/settings">Configuración</Link>
+        <button type="button" onClick={handleSaveVersion}>
+          Guardar versión
+        </button>
         <button type="button" onClick={handleExportPdf}>
           Exportar PDF
         </button>

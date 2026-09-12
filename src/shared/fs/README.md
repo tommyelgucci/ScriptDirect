@@ -6,10 +6,28 @@ Local project folder access, implementing the layout from `ARCHITECTURE.md`:
 my-project/
   project.json
   characters.json
+  locations.json
   episodes/
     s01e10.fountain
     s01e10.meta.json
+  versions/
+    s01e10/
+      index.json
+      2026-08-18T14-30-00-000Z.fountain
 ```
+
+`locations.json` isn't in ARCHITECTURE.md's original example tree, but follows
+exactly the same pattern as `characters.json` — ARCHITECTURE.md's data model
+lists Location as "same pattern as Character".
+
+`versions/<episode base name>/` matches ARCHITECTURE.md's own folder layout
+example, with one refinement: ARCHITECTURE.md's example file name is a plain
+date (`2026-08-18.fountain`), which collides if you save two snapshots the
+same day. Snapshot file names here are a full colon-free ISO timestamp
+instead (colons aren't valid in Windows file names). `index.json` (not in
+ARCHITECTURE.md's example) tracks each snapshot's id/label/timestamp,
+following the same "JSON sidecar next to plain-text content" pattern as
+episode `.meta.json` files.
 
 - `pickProjectFolder()` — opens the browser folder picker and returns a
   `ProjectFileSystem` for the chosen folder.

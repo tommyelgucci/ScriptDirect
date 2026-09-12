@@ -35,6 +35,13 @@ episode `.meta.json` files.
   File System Access API (Chrome/Edge only).
 - `isFileSystemAccessSupported()` — feature-detects the API so callers can
   show a clear message instead of a crash on unsupported browsers.
+- `episodeMeta.ts` — `readEpisodeMeta`/`updateEpisodeMeta`, a read-merge-write
+  helper around `ProjectFileSystem.readEpisodeMeta`/`writeEpisodeMeta`.
+  Brújula's `analysisReport` and Pulso's `sceneMetrics` share one sidecar
+  file (`entities/episode-meta.ts`); writing a fresh object with only one of
+  those fields would let Zod's schema defaults silently reset the other, so
+  every feature that persists episode meta should go through
+  `updateEpisodeMeta` rather than calling `writeEpisodeMeta` directly.
 
 ## TODO: Safari/Firefox fallback
 

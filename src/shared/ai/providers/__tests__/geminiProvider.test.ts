@@ -36,4 +36,29 @@ describe('geminiProvider', () => {
       geminiProvider.analyzeScript({ apiKey: 'x', model: 'gemini-2.0-flash', scriptText: '' }),
     ).rejects.toThrow(/403/)
   })
+
+  it('analyzes scene metrics, returning the parsed array', async () => {
+    const metrics = [
+      {
+        sceneId: 'scn_aaaaaaaaaaaa',
+        emotionalIntensity: 80,
+        dramaticTension: 60,
+        attentionCapture: 90,
+        commercialPotential: 40,
+        dominantEmotion: 'fear',
+      },
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify(metrics) }] } }] }))),
+    )
+
+    const result = await geminiProvider.analyzeSceneMetrics({
+      apiKey: 'gm-test',
+      model: 'gemini-2.0-flash',
+      scriptText: 'INT. KITCHEN - DAY',
+    })
+
+    expect(result).toEqual(metrics)
+  })
 })

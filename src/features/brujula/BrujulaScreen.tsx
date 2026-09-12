@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { episodeMetaSchema } from '../../entities/episode-meta'
 import type { AnalysisReport, FindingReviewState } from '../../entities/analysis-report'
 import { projectSchema } from '../../entities/project'
 import { readApiKey } from '../../shared/ai/apiKeyStorage'
 import { createAIProvider } from '../../shared/ai/createAIProvider'
+import { readEpisodeMeta, updateEpisodeMeta } from '../../shared/fs/episodeMeta'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { buildAnalysisReport, FINDING_SECTIONS, setFindingReviewState, type FindingSection } from './analysisReport'
 import './BrujulaScreen.css'
@@ -21,14 +21,11 @@ export function BrujulaScreen() {
       return
     }
     let cancelled = false
-    project.fileSystem.readEpisodeMeta(project.episodeFileName).then((json) => {
-      if (cancelled || !json) {
+    readEpisodeMeta(project.fileSystem, project.episodeFileName).then((meta) => {
+      if (cancelled) {
         return
       }
-      const parsed = episodeMetaSchema.safeParse(JSON.parse(json))
-      if (parsed.success) {
-        setReport(parsed.data.analysisReport)
-      }
+      setReport(meta.analysisReport)
     })
     return () => {
       cancelled = true
@@ -40,10 +37,7 @@ export function BrujulaScreen() {
       if (!project) {
         return
       }
-      await project.fileSystem.writeEpisodeMeta(
-        project.episodeFileName,
-        JSON.stringify(episodeMetaSchema.parse({ analysisReport: nextReport }), null, 2),
-      )
+      await updateEpisodeMeta(project.fileSystem, project.episodeFileName, { analysisReport: nextReport })
     },
     [project],
   )

@@ -2,6 +2,65 @@
 
 Session log and recent decisions. Newest entries on top.
 
+## 2026-09-13 — All 5 confirmed-still-live Codex findings fixed, easiest to hardest
+
+Went through Codex's review comments across every historical PR, verified
+each finding against current `main` (not the historical diff — several
+were already fixed or superseded), and confirmed 5 were genuinely still
+live. Fixed all 5, on `claude/fix-codex-findings`, in this order:
+
+1. **JSON.parse crash on corrupt sidecar files.** `schema.safeParse(JSON.parse(text))`
+   throws on syntactically invalid JSON before `safeParse` can apply its
+   documented fresh-start fallback — found 11 call sites doing this (not
+   just the 5 originally cited). Added `shared/json/safeParseJson.ts`, a
+   shared helper that never throws, and switched every call site to it.
+
+2. **Path traversal in `TauriProjectFileSystem`.** A version's `fileName`
+   comes back from `versions/index.json` — project data, not something the
+   app generates at read time — and went straight into `join()`. Tauri's
+   fs plugin runs with `fs:scope: "**"` (the whole disk, no sandbox of its
+   own), so a corrupted or hand-edited index entry like
+   `"../../../../etc/passwd"` could read or write outside the project
+   folder. Added `assertSafeFileName()`, applied before the `join()`.
+
+3. **EditorScreen's autosave race.** `saveDoc()` isn't atomic (writes the
+   script, then separately reads-and-rewrites `characters.json` and
+   `locations.json`); the unmount cleanup never cleared the pending-doc
+   ref, so an unmount racing an in-flight debounced save could fire a
+   second, overlapping `saveDoc()` and corrupt those sidecars. Extracted a
+   standalone `autosaveScheduler.ts` that chains every write through one
+   promise so a second flush during an in-flight save is a no-op instead
+   of a race — verified with fake-timer + controlled-promise tests, since
+   real typing into the tiptap editor can't be driven from jsdom
+   (ProseMirror needs `getClientRects`, confirmed by trying it and reading
+   the stack trace).
+
+4. **Pulso's AI metrics were read-only.** No way to correct a
+   misjudged scene's score, or drop just one bad scene, without paying for
+   and waiting on a full re-analysis. Brújula already solves this for its
+   findings (per-finding Aceptar/Descartar); Pulso had nothing equivalent.
+   Added a table under the chart with Editar/Descartar per scene —
+   `SceneMetricEditor.tsx` mirrors Constelación's `CharacterTraitsEditor`
+   pattern (0-100 sliders + a text field), both persist immediately.
+
+5. **The EN/ES language toggle didn't translate anything.** It only ever
+   set `uiLanguage` in the store; no screen read it back, so switching to
+   English had zero visible effect anywhere — confirmed by an earlier
+   session's Playwright pass and logged in the previous entry below. Built
+   a real layer: `shared/i18n/es.ts` + `en.ts` (a shared `Translations`
+   type makes a key missing from either file a `tsc -b` error, not a
+   runtime gap) and `useTranslation()`, wired into all 11 screens'
+   navigation, buttons, headers, empty states, and error messages. Content
+   the user or the AI writes (scene text, Brújula's findings, Pulso's
+   emotion labels) is untouched — not UI chrome. Verified live in a real
+   browser via Playwright: toggling in Configuración re-renders visible
+   text immediately and the choice persists across navigation.
+
+Each fix: full `pnpm test && pnpm lint && pnpm build` green before
+committing, one commit per finding, pushed to `claude/fix-codex-findings`
+for review — no PR opened per the usual pattern (the repo owner reviews
+and merges).
+
 ## 2026-09-12 — Real Tauri build verified; ZIP fallback and a first Cuaderno shipped
 
 Continuing on `claude/session-work`. Went through everything that was

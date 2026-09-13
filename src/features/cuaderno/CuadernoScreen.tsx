@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import type { CuadernoDocument } from '../../entities/cuaderno-document'
+import { createAutosaveScheduler } from '../../shared/autosave/autosaveScheduler'
+import type { ProjectFileSystem } from '../../shared/fs/types'
 import { useTranslation } from '../../shared/i18n/useTranslation'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { createCuadernoDocument, deleteCuadernoDocument, listCuadernoDocuments, updateCuadernoDocument } from './cuadernoStorage'
@@ -9,9 +11,25 @@ import './CuadernoScreen.css'
 const AUTOSAVE_DELAY_MS = 800
 
 interface PendingSave {
+  fileSystem: ProjectFileSystem
   id: string
   title: string
   content: string
+}
+
+// updateCuadernoDocument() isn't atomic (reads cuaderno.json, maps over it,
+// rewrites the whole file), so two overlapping calls can both read the same
+// snapshot and the later one's write clobbers the other's — exactly what
+// EditorScreen's autosaveScheduler already exists to prevent (Codex flagged
+// this same class of bug here too). One scheduler for the component's whole
+// lifetime, same pattern as EditorScreen: useState's lazy initializer runs
+// exactly once, unlike useMemo.
+function save({ fileSystem, id, title, content }: PendingSave, setDocuments: (docs: CuadernoDocument[]) => void) {
+  const patch: { title?: string; content?: string } = { content }
+  if (title.trim()) {
+    patch.title = title.trim()
+  }
+  return updateCuadernoDocument(fileSystem, id, patch).then(setDocuments)
 }
 
 export function CuadernoScreen() {
@@ -23,8 +41,9 @@ export function CuadernoScreen() {
   const [draftTitle, setDraftTitle] = useState('')
   const [draftContent, setDraftContent] = useState('')
 
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingSaveRef = useRef<PendingSave | null>(null)
+  const [scheduler] = useState(() =>
+    createAutosaveScheduler<PendingSave>((pending) => save(pending, setDocuments), AUTOSAVE_DELAY_MS),
+  )
 
   useEffect(() => {
     if (!project) {
@@ -41,46 +60,25 @@ export function CuadernoScreen() {
     }
   }, [project])
 
-  const flushPendingSave = useCallback(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-      saveTimeoutRef.current = null
-    }
-    const pending = pendingSaveRef.current
-    pendingSaveRef.current = null
-    if (!project || !pending) {
-      return
-    }
-    const patch: { title?: string; content?: string } = { content: pending.content }
-    if (pending.title.trim()) {
-      patch.title = pending.title.trim()
-    }
-    void updateCuadernoDocument(project.fileSystem, pending.id, patch).then(setDocuments)
-  }, [project])
-
   // Flush any pending debounced autosave when the project changes or this
   // screen unmounts (navigating away, closing the tab). Content only wrote
   // on blur before, per Codex's review of PR #22: closing the tab/window
   // while a field is still focused never fires blur, so the last edit was
   // silently dropped despite Chromium/Tauri otherwise persisting to real
   // disk. This mirrors EditorScreen's identical autosave-flush pattern.
-  useEffect(() => flushPendingSave, [flushPendingSave])
+  useEffect(() => () => void scheduler.flush(), [project, scheduler])
 
   const selected = documents?.find((document) => document.id === selectedId) ?? null
 
   function scheduleSave(nextTitle: string, nextContent: string) {
-    if (!selected) {
+    if (!project || !selected) {
       return
     }
-    pendingSaveRef.current = { id: selected.id, title: nextTitle, content: nextContent }
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-    }
-    saveTimeoutRef.current = setTimeout(flushPendingSave, AUTOSAVE_DELAY_MS)
+    scheduler.schedule({ fileSystem: project.fileSystem, id: selected.id, title: nextTitle, content: nextContent })
   }
 
   function selectDocument(document: CuadernoDocument) {
-    flushPendingSave()
+    void scheduler.flush()
     setSelectedId(document.id)
     setDraftTitle(document.title)
     setDraftContent(document.content)
@@ -102,11 +100,7 @@ export function CuadernoScreen() {
       return
     }
     // Discard any pending edit rather than saving it right before deleting the document.
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-      saveTimeoutRef.current = null
-    }
-    pendingSaveRef.current = null
+    scheduler.cancel()
     const updated = await deleteCuadernoDocument(project.fileSystem, selected.id)
     setDocuments(updated)
     setSelectedId(null)
@@ -169,7 +163,7 @@ export function CuadernoScreen() {
                 setDraftTitle(event.target.value)
                 scheduleSave(event.target.value, draftContent)
               }}
-              onBlur={flushPendingSave}
+              onBlur={() => void scheduler.flush()}
             />
             <textarea
               aria-label={t.cuaderno.contentInputLabel}
@@ -178,7 +172,7 @@ export function CuadernoScreen() {
                 setDraftContent(event.target.value)
                 scheduleSave(draftTitle, event.target.value)
               }}
-              onBlur={flushPendingSave}
+              onBlur={() => void scheduler.flush()}
             />
             <button type="button" onClick={handleDelete} className="cuaderno-screen__delete">
               {t.cuaderno.deleteDocument}

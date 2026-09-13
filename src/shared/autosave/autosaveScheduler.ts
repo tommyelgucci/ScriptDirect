@@ -15,6 +15,14 @@
  * the debounce timer firing right as the component unmounts) only sends
  * one write, not a duplicate.
  *
+ * Also guards against a second class of bug Codex's review flagged: if
+ * save A is still in flight when a newer edit B gets scheduled, A resolving
+ * must not report 'saved' — B is the latest truth and it's still unsaved.
+ * Every `schedule()` call bumps a generation counter; a save's completion
+ * only reports its status if no newer edit has been scheduled since it
+ * started, so the status shown always reflects the most recent edit, not
+ * whichever save happened to finish last.
+ *
  * Framework-agnostic on purpose: real typing into the tiptap editor this
  * schedules autosaves for can't be driven from jsdom (ProseMirror needs
  * `getClientRects`, which jsdom doesn't implement), so this logic has to be
@@ -37,6 +45,12 @@ export function createAutosaveScheduler<T>(
   let timeoutId: ReturnType<typeof setTimeout> | null = null
   let pending: T | null = null
   let writeChain: Promise<void> = Promise.resolve()
+  // Bumped by every schedule() — identifies "the newest edit not yet
+  // confirmed saved." A save's completion only reports its status if this
+  // is still the latest generation; otherwise a newer edit has since been
+  // scheduled and the status must stay 'saving' for it, not flip to
+  // 'saved' for the older write that just happened to finish first.
+  let latestGeneration = 0
 
   function flush(): Promise<void> {
     if (timeoutId !== null) {
@@ -48,15 +62,25 @@ export function createAutosaveScheduler<T>(
     if (value === null) {
       return writeChain
     }
+    const generation = latestGeneration
     writeChain = writeChain
       .then(() => save(value))
-      .then(() => onStatusChange?.('saved'))
-      .catch(() => onStatusChange?.('error'))
+      .then(() => {
+        if (generation === latestGeneration) {
+          onStatusChange?.('saved')
+        }
+      })
+      .catch(() => {
+        if (generation === latestGeneration) {
+          onStatusChange?.('error')
+        }
+      })
     return writeChain
   }
 
   function schedule(value: T): void {
     pending = value
+    latestGeneration += 1
     if (timeoutId !== null) {
       clearTimeout(timeoutId)
     }

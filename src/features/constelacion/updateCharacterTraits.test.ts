@@ -49,4 +49,15 @@ describe('updateCharacterTraits', () => {
     const updated = await updateCharacterTraits(fakeFileSystem(), 'chr_missing', { empathy: 50 })
     expect(updated).toEqual([])
   })
+
+  // Codex's review (PR #3, #13) flagged that JSON.parse throwing on
+  // syntactically invalid (not just schema-invalid) JSON crashed here instead
+  // of following the same fresh-start fallback used elsewhere.
+  it('returns an empty list instead of throwing when characters.json is truncated/malformed JSON', async () => {
+    const fileSystem = fakeFileSystem({ readCharactersJson: async () => '{"truncated' })
+
+    const updated = await updateCharacterTraits(fileSystem, 'chr_missing', { empathy: 50 })
+
+    expect(updated).toEqual([])
+  })
 })

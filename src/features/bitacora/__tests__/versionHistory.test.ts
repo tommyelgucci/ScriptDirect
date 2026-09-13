@@ -35,6 +35,14 @@ describe('listVersions', () => {
     const fileSystem = fakeFileSystem({ readVersionsIndexJson: async () => '{"not":"an array"}' })
     expect(await listVersions(fileSystem, 'script.fountain')).toEqual([])
   })
+
+  // Codex's review (PRs #5, #7, #16, #19) flagged that JSON.parse throwing on
+  // syntactically invalid (not just schema-invalid) JSON skipped this same
+  // fallback, leaving the history screen stuck loading.
+  it('starts fresh instead of throwing when the index is truncated/malformed JSON', async () => {
+    const fileSystem = fakeFileSystem({ readVersionsIndexJson: async () => '{"truncated' })
+    expect(await listVersions(fileSystem, 'script.fountain')).toEqual([])
+  })
 })
 
 describe('createVersionSnapshot', () => {

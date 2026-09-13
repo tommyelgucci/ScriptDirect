@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
 import { characterSchema, type Character, type CharacterTraits } from '../../entities/character'
 import { locationSchema, type Location } from '../../entities/location'
+import { safeParseJson } from '../../shared/json/safeParseJson'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { CharacterTraitsEditor } from './CharacterTraitsEditor'
 import './ConstelacionScreen.css'
@@ -29,10 +30,10 @@ export function ConstelacionScreen() {
         if (cancelled) {
           return
         }
-        const parsedCharacters = charactersJson ? z.array(characterSchema).safeParse(JSON.parse(charactersJson)) : null
+        const parsedCharacters = charactersJson ? safeParseJson(z.array(characterSchema), charactersJson) : null
         setCharacters(parsedCharacters?.success ? parsedCharacters.data : [])
 
-        const parsedLocations = locationsJson ? z.array(locationSchema).safeParse(JSON.parse(locationsJson)) : null
+        const parsedLocations = locationsJson ? safeParseJson(z.array(locationSchema), locationsJson) : null
         setLocations(parsedLocations?.success ? parsedLocations.data : [])
       },
     )

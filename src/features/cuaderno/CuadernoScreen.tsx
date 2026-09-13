@@ -1,9 +1,17 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import type { CuadernoDocument } from '../../entities/cuaderno-document'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { createCuadernoDocument, deleteCuadernoDocument, listCuadernoDocuments, updateCuadernoDocument } from './cuadernoStorage'
 import './CuadernoScreen.css'
+
+const AUTOSAVE_DELAY_MS = 800
+
+interface PendingSave {
+  id: string
+  title: string
+  content: string
+}
 
 export function CuadernoScreen() {
   const project = useAppStore((state) => state.project)
@@ -12,6 +20,9 @@ export function CuadernoScreen() {
   const [newTitle, setNewTitle] = useState('')
   const [draftTitle, setDraftTitle] = useState('')
   const [draftContent, setDraftContent] = useState('')
+
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingSaveRef = useRef<PendingSave | null>(null)
 
   useEffect(() => {
     if (!project) {
@@ -28,9 +39,46 @@ export function CuadernoScreen() {
     }
   }, [project])
 
+  const flushPendingSave = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = null
+    }
+    const pending = pendingSaveRef.current
+    pendingSaveRef.current = null
+    if (!project || !pending) {
+      return
+    }
+    const patch: { title?: string; content?: string } = { content: pending.content }
+    if (pending.title.trim()) {
+      patch.title = pending.title.trim()
+    }
+    void updateCuadernoDocument(project.fileSystem, pending.id, patch).then(setDocuments)
+  }, [project])
+
+  // Flush any pending debounced autosave when the project changes or this
+  // screen unmounts (navigating away, closing the tab). Content only wrote
+  // on blur before, per Codex's review of PR #22: closing the tab/window
+  // while a field is still focused never fires blur, so the last edit was
+  // silently dropped despite Chromium/Tauri otherwise persisting to real
+  // disk. This mirrors EditorScreen's identical autosave-flush pattern.
+  useEffect(() => flushPendingSave, [flushPendingSave])
+
   const selected = documents?.find((document) => document.id === selectedId) ?? null
 
+  function scheduleSave(nextTitle: string, nextContent: string) {
+    if (!selected) {
+      return
+    }
+    pendingSaveRef.current = { id: selected.id, title: nextTitle, content: nextContent }
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+    saveTimeoutRef.current = setTimeout(flushPendingSave, AUTOSAVE_DELAY_MS)
+  }
+
   function selectDocument(document: CuadernoDocument) {
+    flushPendingSave()
     setSelectedId(document.id)
     setDraftTitle(document.title)
     setDraftContent(document.content)
@@ -47,18 +95,16 @@ export function CuadernoScreen() {
     selectDocument(updated[updated.length - 1])
   }
 
-  async function persistDraft(patch: { title?: string; content?: string }) {
-    if (!project || !selected) {
-      return
-    }
-    const updated = await updateCuadernoDocument(project.fileSystem, selected.id, patch)
-    setDocuments(updated)
-  }
-
   async function handleDelete() {
     if (!project || !selected) {
       return
     }
+    // Discard any pending edit rather than saving it right before deleting the document.
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = null
+    }
+    pendingSaveRef.current = null
     const updated = await deleteCuadernoDocument(project.fileSystem, selected.id)
     setDocuments(updated)
     setSelectedId(null)
@@ -117,14 +163,20 @@ export function CuadernoScreen() {
               aria-label="Título del documento"
               className="cuaderno-screen__title-input"
               value={draftTitle}
-              onChange={(event) => setDraftTitle(event.target.value)}
-              onBlur={() => draftTitle.trim() && persistDraft({ title: draftTitle.trim() })}
+              onChange={(event) => {
+                setDraftTitle(event.target.value)
+                scheduleSave(event.target.value, draftContent)
+              }}
+              onBlur={flushPendingSave}
             />
             <textarea
               aria-label="Contenido del documento"
               value={draftContent}
-              onChange={(event) => setDraftContent(event.target.value)}
-              onBlur={() => persistDraft({ content: draftContent })}
+              onChange={(event) => {
+                setDraftContent(event.target.value)
+                scheduleSave(draftTitle, event.target.value)
+              }}
+              onBlur={flushPendingSave}
             />
             <button type="button" onClick={handleDelete} className="cuaderno-screen__delete">
               Eliminar documento

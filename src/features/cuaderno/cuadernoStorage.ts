@@ -2,10 +2,11 @@ import { z } from 'zod'
 import { cuadernoDocumentSchema, type CuadernoDocument } from '../../entities/cuaderno-document'
 import { createId } from '../../entities/id'
 import type { ProjectFileSystem } from '../../shared/fs/types'
+import { safeParseJson } from '../../shared/json/safeParseJson'
 
 async function readAll(fileSystem: ProjectFileSystem): Promise<CuadernoDocument[]> {
   const json = await fileSystem.readCuadernoJson()
-  const parsed = json ? z.array(cuadernoDocumentSchema).safeParse(JSON.parse(json)) : null
+  const parsed = json ? safeParseJson(z.array(cuadernoDocumentSchema), json) : null
   return parsed?.success ? parsed.data : []
 }
 

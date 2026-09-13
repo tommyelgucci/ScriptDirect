@@ -23,3 +23,11 @@ export class ProjectFolderSelectionCancelledError extends Error {
     this.name = 'ProjectFolderSelectionCancelledError'
   }
 }
+
+/** Thrown when a file name read back from project data contains a path separator or `..` segment. */
+export class UnsafeFileNameError extends Error {
+  constructor(fileName: string) {
+    super(`Refusing to use "${fileName}" as a file name: it must be a bare name, not a path.`)
+    this.name = 'UnsafeFileNameError'
+  }
+}

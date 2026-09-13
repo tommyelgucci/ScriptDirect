@@ -44,6 +44,7 @@ function renderCuadernoScreen() {
       <Routes>
         <Route path="/" element={<p>Home screen</p>} />
         <Route path="/cuaderno" element={<CuadernoScreen />} />
+        <Route path="/editor" element={<p>Editor screen</p>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -139,5 +140,61 @@ describe('CuadernoScreen', () => {
     await waitFor(() => expect(writeCuadernoJson).toHaveBeenCalledTimes(1))
     expect(JSON.parse(writeCuadernoJson.mock.calls[0][0])).toEqual([])
     expect(screen.getByText('Todavía no hay documentos.')).toBeInTheDocument()
+  })
+
+  // Codex's review of PR #22: content only persisted on blur, and closing
+  // the tab/window (or otherwise unmounting) while the field is still
+  // focused never fires blur, so the edit was silently dropped despite
+  // Chromium/Tauri otherwise autosaving to real disk. Unmounting directly
+  // (rather than clicking a link to navigate away) is deliberate: a click
+  // on another element naturally blurs the previously focused field first,
+  // which would make the old, buggy onBlur-only code pass this test too.
+  it('flushes a pending edit when the component unmounts, without ever blurring the field', async () => {
+    const writeCuadernoJson = vi.fn(async (_content: string) => {})
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({
+        readCuadernoJson: async () => JSON.stringify([EXISTING_DOCUMENT]),
+        writeCuadernoJson,
+      }),
+      episodeFileName: 'script.fountain',
+    })
+
+    const { unmount } = renderCuadernoScreen()
+    await userEvent.click(await screen.findByRole('button', { name: 'Biografía de Rick' }))
+    await userEvent.type(screen.getByLabelText('Contenido del documento'), ' Más texto.')
+    unmount()
+
+    await waitFor(() => expect(writeCuadernoJson).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(writeCuadernoJson.mock.calls[0][0])[0].content).toBe(
+      'Un genio alcohólico y nihilista. Más texto.',
+    )
+  })
+
+  // Clicking another document's button naturally blurs the field first (a
+  // real interaction, not the unmount-without-blur gap above), so this was
+  // never actually broken — it just confirms the new debounce/flush
+  // plumbing doesn't regress it.
+  it('still saves one document before switching to another on click', async () => {
+    const other = { ...EXISTING_DOCUMENT, id: 'doc_other00000001', title: 'Otro documento', content: 'Otro contenido' }
+    const writeCuadernoJson = vi.fn(async (_content: string) => {})
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({
+        readCuadernoJson: async () => JSON.stringify([EXISTING_DOCUMENT, other]),
+        writeCuadernoJson,
+      }),
+      episodeFileName: 'script.fountain',
+    })
+
+    renderCuadernoScreen()
+    await userEvent.click(await screen.findByRole('button', { name: 'Biografía de Rick' }))
+    await userEvent.type(screen.getByLabelText('Contenido del documento'), ' Más texto.')
+    await userEvent.click(screen.getByRole('button', { name: 'Otro documento' }))
+
+    await waitFor(() => expect(writeCuadernoJson).toHaveBeenCalledTimes(1))
+    const saved = JSON.parse(writeCuadernoJson.mock.calls[0][0])
+    expect(saved.find((document: { id: string }) => document.id === EXISTING_DOCUMENT.id).content).toBe(
+      'Un genio alcohólico y nihilista. Más texto.',
+    )
+    expect(screen.getByLabelText('Contenido del documento')).toHaveValue('Otro contenido')
   })
 })

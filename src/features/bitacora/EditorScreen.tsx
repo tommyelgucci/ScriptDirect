@@ -6,6 +6,8 @@ import { ZipProjectFileSystem } from '../../shared/fs'
 import { downloadBlob } from '../../shared/pdf/downloadBlob'
 import { exportScreenplayPdf } from '../../shared/pdf/exportScreenplayPdf'
 import { useAppStore } from '../../shared/store/useAppStore'
+import type { ProjectSession } from '../../shared/store/useAppStore'
+import { createAutosaveScheduler } from './autosaveScheduler'
 import { BlockEditor } from './BlockEditor'
 import './EditorScreen.css'
 import { scenesToTiptapDoc, tiptapDocToFountainText } from './fountainTiptap'
@@ -18,6 +20,12 @@ const AUTOSAVE_DELAY_MS = 800
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
+/** Bound with whichever project was active at schedule() time, not at flush time — switching episodes mid-debounce must still save to the episode that was actually edited. */
+interface PendingSave {
+  project: ProjectSession
+  doc: JSONContent
+}
+
 export function EditorScreen() {
   const project = useAppStore((state) => state.project)
   const closeProject = useAppStore((state) => state.closeProject)
@@ -26,8 +34,18 @@ export function EditorScreen() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const editorRef = useRef<Editor | null>(null)
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const latestDocRef = useRef<JSONContent | null>(null)
+  // One scheduler for the component's whole lifetime (useState's lazy
+  // initializer runs exactly once, unlike useMemo). It serializes every
+  // autosave write — including the one the unmount cleanup below forces —
+  // so an unmount racing a debounced save in flight can't fire a second,
+  // overlapping saveDoc() call and corrupt characters.json/locations.json.
+  const [scheduler] = useState(() =>
+    createAutosaveScheduler<PendingSave>(
+      ({ project: activeProject, doc }) => saveDoc(activeProject.fileSystem, activeProject.episodeFileName, doc),
+      AUTOSAVE_DELAY_MS,
+      setSaveStatus,
+    ),
+  )
 
   useEffect(() => {
     if (!project) {
@@ -67,33 +85,16 @@ export function EditorScreen() {
       if (!project) {
         return
       }
-      latestDocRef.current = doc
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-      setSaveStatus('saving')
-      saveTimeoutRef.current = setTimeout(() => {
-        saveDoc(project.fileSystem, project.episodeFileName, doc)
-          .then(() => setSaveStatus('saved'))
-          .catch(() => setSaveStatus('error'))
-      }, AUTOSAVE_DELAY_MS)
+      scheduler.schedule({ project, doc })
     },
-    [project],
+    [project, scheduler],
   )
 
-  // Flush any pending autosave immediately when leaving the editor, so
-  // closing the project (or navigating away) can't drop the last edit.
-  useEffect(
-    () => () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-      if (project && latestDocRef.current) {
-        void saveDoc(project.fileSystem, project.episodeFileName, latestDocRef.current)
-      }
-    },
-    [project],
-  )
+  // Flush any pending autosave immediately when leaving the editor or
+  // switching episodes, so neither can drop the last edit. `scheduler` is
+  // stable for the component's life, so this only re-registers on a real
+  // `project` change (including an episode switch) and on unmount.
+  useEffect(() => () => void scheduler.flush(), [project, scheduler])
 
   const handleChange = useCallback(
     (doc: JSONContent) => {
@@ -121,16 +122,10 @@ export function EditorScreen() {
       return
     }
     // Flush any pending debounced autosave first, so the export can't miss the last edit.
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-      saveTimeoutRef.current = null
-    }
-    if (latestDocRef.current) {
-      await saveDoc(project.fileSystem, project.episodeFileName, latestDocRef.current)
-    }
+    await scheduler.flush()
     const bytes = await project.fileSystem.exportZip()
     downloadBlob(bytes, `${project.fileSystem.projectName}.zip`, 'application/zip')
-  }, [project])
+  }, [project, scheduler])
 
   const handleSaveVersion = useCallback(async () => {
     if (!project || !content) {

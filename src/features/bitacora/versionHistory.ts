@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { isoTimestampSchema } from '../../entities/common'
 import { createId, idSchema } from '../../entities/id'
 import type { ProjectFileSystem } from '../../shared/fs/types'
+import { safeParseJson } from '../../shared/json/safeParseJson'
 
 /**
  * A lightweight snapshot record — deliberately not entities/version.ts's
@@ -31,7 +32,7 @@ export async function listVersions(fileSystem: ProjectFileSystem, episodeFileNam
   if (!json) {
     return []
   }
-  const parsed = z.array(versionEntrySchema).safeParse(JSON.parse(json))
+  const parsed = safeParseJson(z.array(versionEntrySchema), json)
   if (!parsed.success) {
     console.warn('versions index.json is invalid; showing no history.', parsed.error)
     return []

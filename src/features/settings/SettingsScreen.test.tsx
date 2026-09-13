@@ -62,6 +62,22 @@ describe('SettingsScreen', () => {
     expect(useAppStore.getState().uiLanguage).toBe('en')
   })
 
+  // Codex's review flagged that the toggle only ever changed uiLanguage in
+  // the store — nothing in the UI actually read it, so switching to English
+  // had zero visible effect anywhere in the app. This confirms the toggle
+  // now drives real rendered text, on this same screen and not just here.
+  it('actually re-renders the screen in English once switched, not just the store flag', async () => {
+    renderSettingsScreen()
+    expect(screen.getByRole('heading', { name: 'Configuración' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('radio', { name: 'English' }))
+
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Configuración' })).not.toBeInTheDocument()
+  })
+
   it('updates the default model when the provider changes', async () => {
     renderSettingsScreen()
 

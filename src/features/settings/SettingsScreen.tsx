@@ -4,6 +4,7 @@ import type { AiProviderName } from '../../entities/project'
 import { projectSchema } from '../../entities/project'
 import { readApiKey, writeApiKey } from '../../shared/ai/apiKeyStorage'
 import { isTauriRuntime } from '../../shared/fs/capability'
+import { useTranslation } from '../../shared/i18n/useTranslation'
 import { safeParseJson } from '../../shared/json/safeParseJson'
 import { useAppStore } from '../../shared/store/useAppStore'
 import './SettingsScreen.css'
@@ -25,6 +26,7 @@ function defaultModelFor(provider: AiProviderName): string {
 }
 
 export function SettingsScreen() {
+  const t = useTranslation()
   const project = useAppStore((state) => state.project)
   const uiLanguage = useAppStore((state) => state.uiLanguage)
   const setUiLanguage = useAppStore((state) => state.setUiLanguage)
@@ -112,13 +114,13 @@ export function SettingsScreen() {
   return (
     <main className="settings-screen">
       <Link to={project ? '/editor' : '/'} className="settings-screen__back">
-        ← Volver
+        {t.settings.back}
       </Link>
-      <h1>Configuración</h1>
+      <h1>{t.settings.title}</h1>
 
       <section>
-        <h2>Idioma</h2>
-        <div role="radiogroup" aria-label="Idioma de la interfaz">
+        <h2>{t.settings.language}</h2>
+        <div role="radiogroup" aria-label={t.settings.languageAriaLabel}>
           <label>
             <input
               type="radio"
@@ -126,7 +128,7 @@ export function SettingsScreen() {
               checked={uiLanguage === 'es'}
               onChange={() => setUiLanguage('es')}
             />
-            Español
+            {t.settings.spanish}
           </label>
           <label>
             <input
@@ -135,21 +137,19 @@ export function SettingsScreen() {
               checked={uiLanguage === 'en'}
               onChange={() => setUiLanguage('en')}
             />
-            English
+            {t.settings.english}
           </label>
         </div>
       </section>
 
       <section>
-        <h2>Proveedor de IA (BYOK)</h2>
+        <h2>{t.settings.aiProvider}</h2>
         <p className="settings-screen__disclosure">
-          {isTauriRuntime()
-            ? 'Tu clave se guarda en el llavero de tu sistema operativo y se envía únicamente al proveedor que elijas — nunca a un servidor de ScriptDirect.'
-            : 'Tu clave se guarda solo en este navegador (localStorage) y se envía únicamente al proveedor que elijas — nunca a un servidor de ScriptDirect. No es un almacenamiento fuertemente cifrado: evita usarla en un equipo compartido.'}
+          {isTauriRuntime() ? t.settings.disclosureTauri : t.settings.disclosureBrowser}
         </p>
 
         <label>
-          Proveedor
+          {t.settings.provider}
           <select
             value={provider}
             onChange={(event) => handleProviderChange(event.target.value as AiProviderName)}
@@ -163,12 +163,12 @@ export function SettingsScreen() {
         </label>
 
         <label>
-          Modelo
+          {t.settings.model}
           <input type="text" value={model} onChange={(event) => setModel(event.target.value)} />
         </label>
 
         <label>
-          Clave de API
+          {t.settings.apiKey}
           <input
             type="password"
             value={apiKey}
@@ -181,9 +181,9 @@ export function SettingsScreen() {
         </label>
 
         <button type="button" onClick={handleSave}>
-          Guardar
+          {t.settings.save}
         </button>
-        {saved && <span role="status">Guardado</span>}
+        {saved && <span role="status">{t.settings.saved}</span>}
       </section>
     </main>
   )

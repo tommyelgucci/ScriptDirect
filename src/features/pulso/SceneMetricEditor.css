@@ -1,0 +1,23 @@
+.scene-metric-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 0;
+}
+
+.scene-metric-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+}
+
+.scene-metric-editor input[type='text'] {
+  padding: 0.3rem 0.5rem;
+}
+
+.scene-metric-editor button {
+  align-self: flex-start;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+}

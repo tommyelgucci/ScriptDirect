@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import type { Act } from '../../entities/beat'
 import { readEpisodeMeta, updateEpisodeMeta } from '../../shared/fs/episodeMeta'
 import { parseFountainDocument } from '../../shared/fountain'
+import { useTranslation } from '../../shared/i18n/useTranslation'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { buildRutaRows, rowsToBeats, type RutaRow } from './buildRutaRows'
 import './RutaScreen.css'
@@ -10,6 +11,7 @@ import './RutaScreen.css'
 const ACTS: Act[] = [1, 2, 3]
 
 export function RutaScreen() {
+  const t = useTranslation()
   const project = useAppStore((state) => state.project)
   const [rows, setRows] = useState<RutaRow[] | null>(null)
 
@@ -73,21 +75,21 @@ export function RutaScreen() {
   return (
     <main className="ruta-screen">
       <Link to="/editor" className="ruta-screen__back">
-        ← Volver al guion
+        {t.common.backToScript}
       </Link>
-      <h1>Ruta</h1>
-      <p>Estructura de actos y beats por escena, en el orden del guion.</p>
+      <h1>{t.ruta.title}</h1>
+      <p>{t.ruta.subtitle}</p>
 
-      {rows === null && <p className="ruta-screen__loading">Cargando…</p>}
-      {rows?.length === 0 && <p className="ruta-screen__empty">Todavía no hay escenas con id asignado.</p>}
+      {rows === null && <p className="ruta-screen__loading">{t.ruta.loading}</p>}
+      {rows?.length === 0 && <p className="ruta-screen__empty">{t.ruta.empty}</p>}
 
       {rows && rows.length > 0 && (
         <table>
           <thead>
             <tr>
-              <th>Escena</th>
-              <th>Acto</th>
-              <th>Beat</th>
+              <th>{t.ruta.scene}</th>
+              <th>{t.ruta.act}</th>
+              <th>{t.ruta.beat}</th>
             </tr>
           </thead>
           <tbody>
@@ -96,7 +98,7 @@ export function RutaScreen() {
                 <td>{row.heading}</td>
                 <td>
                   <select
-                    aria-label={`Acto de ${row.heading}`}
+                    aria-label={t.ruta.actAriaLabel(row.heading)}
                     value={row.act}
                     onChange={(event) => handleActChange(row.sceneId, Number(event.target.value) as Act)}
                   >
@@ -110,11 +112,11 @@ export function RutaScreen() {
                 <td>
                   <input
                     type="text"
-                    aria-label={`Beat de ${row.heading}`}
+                    aria-label={t.ruta.beatAriaLabel(row.heading)}
                     value={row.label}
                     onChange={(event) => handleLabelChange(row.sceneId, event.target.value)}
                     onBlur={handleLabelBlur}
-                    placeholder="p. ej. Incidente incitador"
+                    placeholder={t.ruta.beatPlaceholder}
                   />
                 </td>
               </tr>

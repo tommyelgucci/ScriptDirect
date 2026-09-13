@@ -28,3 +28,30 @@
 .pulso-screen__chart {
   margin-top: 2rem;
 }
+
+.pulso-screen__table {
+  width: 100%;
+  margin-top: 2rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.pulso-screen__table th,
+.pulso-screen__table td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #333;
+}
+
+.pulso-screen__table th {
+  color: #888;
+  font-weight: normal;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.pulso-screen__table td button {
+  margin: 0 0.4rem 0 0;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+}

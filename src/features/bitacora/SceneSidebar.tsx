@@ -1,3 +1,4 @@
+import { useTranslation } from '../../shared/i18n/useTranslation'
 import './SceneSidebar.css'
 import type { SceneListItem } from './sceneList'
 
@@ -7,10 +8,11 @@ interface SceneSidebarProps {
 }
 
 export function SceneSidebar({ scenes, onSelectScene }: SceneSidebarProps) {
+  const t = useTranslation()
   return (
-    <nav className="scene-sidebar" aria-label="Escenas">
-      <h2>Escenas</h2>
-      {scenes.length === 0 && <p className="scene-sidebar__empty">Todavía no hay escenas.</p>}
+    <nav className="scene-sidebar" aria-label={t.sceneSidebar.ariaLabel}>
+      <h2>{t.sceneSidebar.title}</h2>
+      {scenes.length === 0 && <p className="scene-sidebar__empty">{t.sceneSidebar.empty}</p>}
       <ol>
         {scenes.map((scene, index) => (
           <li key={scene.sceneId ?? index}>

@@ -68,6 +68,7 @@ describe('EditorScreen', () => {
 
   afterEach(() => {
     useAppStore.getState().closeProject()
+    useAppStore.getState().setUiLanguage('es')
   })
 
   it('redirects to home when no project is open', async () => {
@@ -113,6 +114,19 @@ describe('EditorScreen', () => {
     renderEditorScreen()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/no se pudo abrir/i)
+  })
+
+  it('renders its nav links in English when the UI language is set to English', async () => {
+    useAppStore.getState().setUiLanguage('en')
+    const fileSystem = fakeFileSystem({ readEpisodeFountain: async () => '' })
+    useAppStore.getState().openProject({ fileSystem, episodeFileName: 'script.fountain' })
+
+    renderEditorScreen()
+
+    expect(await screen.findByRole('link', { name: 'Episodes' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Notebook' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Close project' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Cuaderno' })).not.toBeInTheDocument()
   })
 
   it('closing the project navigates back to home', async () => {

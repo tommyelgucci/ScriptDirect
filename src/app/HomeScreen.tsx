@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createId } from '../entities/id'
 import type { Project } from '../entities/project'
 import { projectSchema } from '../entities/project'
+import { useTranslation } from '../shared/i18n/useTranslation'
 import { safeParseJson } from '../shared/json/safeParseJson'
 import {
   FileSystemAccessUnsupportedError,
@@ -27,6 +28,7 @@ function createNewProject(name: string): Project {
 }
 
 export function HomeScreen() {
+  const t = useTranslation()
   const navigate = useNavigate()
   const openProject = useAppStore((state) => state.openProject)
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +44,7 @@ export function HomeScreen() {
       if (existingJson) {
         const parsed = safeParseJson(projectSchema, existingJson)
         if (!parsed.success) {
-          setError('El archivo project.json de esta carpeta no es válido.')
+          setError(t.home.invalidProjectJsonFolder)
           return
         }
       } else {
@@ -58,7 +60,7 @@ export function HomeScreen() {
       } else if (caught instanceof FileSystemAccessUnsupportedError) {
         setError(caught.message)
       } else {
-        setError('No se pudo abrir la carpeta del proyecto.')
+        setError(t.home.couldNotOpenFolder)
       }
     } finally {
       setIsOpening(false)
@@ -77,18 +79,18 @@ export function HomeScreen() {
       const fileSystem = await ZipProjectFileSystem.importZip(new Uint8Array(await file.arrayBuffer()), projectName)
       const existingJson = await fileSystem.readProjectJson()
       if (!existingJson) {
-        setError('Este .zip no contiene un proyecto de ScriptDirect (falta project.json).')
+        setError(t.home.zipMissingProjectJson)
         return
       }
       const parsed = safeParseJson(projectSchema, existingJson)
       if (!parsed.success) {
-        setError('El archivo project.json de este .zip no es válido.')
+        setError(t.home.invalidProjectJsonZip)
         return
       }
       openProject({ fileSystem, episodeFileName: DEFAULT_EPISODE_FILE_NAME })
       navigate('/episodios')
     } catch {
-      setError('No se pudo leer el archivo .zip.')
+      setError(t.home.couldNotReadZip)
     } finally {
       setIsOpening(false)
     }
@@ -96,7 +98,7 @@ export function HomeScreen() {
 
   function handleCreateZipProject() {
     setError(null)
-    const name = window.prompt('Nombre del proyecto:')
+    const name = window.prompt(t.home.newProjectNamePrompt)
     if (!name) {
       return // writer cancelled or left it empty
     }
@@ -109,29 +111,25 @@ export function HomeScreen() {
 
   return (
     <main className="home-screen">
-      <h1>ScriptDirect</h1>
-      <p>Suite de guionismo local-first. Un proyecto es una carpeta en tu disco.</p>
+      <h1>{t.home.title}</h1>
+      <p>{t.home.subtitle}</p>
       {needsZipFallback() ? (
         <>
-          <p className="home-screen__zip-notice">
-            Tu navegador (Safari o Firefox) no permite abrir carpetas directamente. ScriptDirect guarda tu proyecto
-            como un archivo .zip en su lugar — recuerda exportarlo desde el editor después de cada sesión de
-            trabajo, o instala la versión de escritorio para guardado automático en una carpeta real.
-          </p>
+          <p className="home-screen__zip-notice">{t.home.zipNotice}</p>
           <button type="button" onClick={handleImportZip} disabled={isOpening}>
-            {isOpening ? 'Abriendo…' : 'Importar proyecto (.zip)'}
+            {isOpening ? t.home.opening : t.home.importZip}
           </button>
           <button type="button" onClick={handleCreateZipProject} disabled={isOpening}>
-            Crear nuevo proyecto
+            {t.home.createNewProject}
           </button>
         </>
       ) : (
         <button type="button" onClick={handleOpenProject} disabled={isOpening}>
-          {isOpening ? 'Abriendo…' : 'Abrir carpeta de proyecto'}
+          {isOpening ? t.home.opening : t.home.openFolder}
         </button>
       )}
       <p>
-        <Link to="/settings">Configuración</Link>
+        <Link to="/settings">{t.home.settingsLink}</Link>
       </p>
       {error && (
         <p role="alert" className="home-screen__error">

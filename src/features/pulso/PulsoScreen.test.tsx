@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -138,5 +138,88 @@ describe('PulsoScreen', () => {
     const saved = JSON.parse(savedJson)
     expect(saved.sceneMetrics).toHaveLength(SCENE_IDS.length)
     expect(saved.analysisReport.id).toBe('rpt_aaaaaaaaaaaa')
+  })
+
+  function existingMetrics() {
+    return SCENE_IDS.map((sceneId, index) => ({
+      sceneId,
+      emotionalIntensity: 50 + index,
+      dramaticTension: 40 + index,
+      attentionCapture: 60 + index,
+      commercialPotential: 30 + index,
+      dominantEmotion: 'miedo',
+    }))
+  }
+
+  it('lets the writer hand-correct one scene score without re-running the AI analysis', async () => {
+    const writeEpisodeMeta = vi.fn(async (_fileName: string, _content: string) => {})
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({
+        readEpisodeMeta: async () => JSON.stringify({ sceneMetrics: existingMetrics() }),
+        writeEpisodeMeta,
+      }),
+      episodeFileName: 'script.fountain',
+    })
+
+    renderPulsoScreen()
+
+    const rows = await screen.findAllByRole('row')
+    await userEvent.click(within(rows[1]).getByRole('button', { name: 'Editar' }))
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Intensidad emocional' }), { target: { value: '99' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(await within((await screen.findAllByRole('row'))[1]).findByText('99')).toBeInTheDocument()
+    expect(writeEpisodeMeta).toHaveBeenCalledTimes(1)
+    const saved = JSON.parse(writeEpisodeMeta.mock.calls[0][1])
+    expect(saved.sceneMetrics[0].emotionalIntensity).toBe(99)
+    expect(saved.sceneMetrics[0].dramaticTension).toBe(existingMetrics()[0].dramaticTension) // untouched
+  })
+
+  it('lets the writer dismiss a single scene analysis, after confirming', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const writeEpisodeMeta = vi.fn(async (_fileName: string, _content: string) => {})
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({
+        readEpisodeMeta: async () => JSON.stringify({ sceneMetrics: existingMetrics() }),
+        writeEpisodeMeta,
+      }),
+      episodeFileName: 'script.fountain',
+    })
+
+    renderPulsoScreen()
+
+    const rows = await screen.findAllByRole('row')
+    expect(rows).toHaveLength(3) // header + 2 scenes
+    await userEvent.click(within(rows[1]).getByRole('button', { name: 'Descartar' }))
+
+    expect(await screen.findAllByRole('row')).toHaveLength(2) // header + 1 remaining scene
+    const saved = JSON.parse(writeEpisodeMeta.mock.calls[0][1])
+    expect(saved.sceneMetrics).toHaveLength(1)
+    expect(saved.sceneMetrics[0].sceneId).toBe(SCENE_IDS[1])
+
+    vi.restoreAllMocks()
+  })
+
+  it('keeps a scene analysis when dismissing is not confirmed', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const writeEpisodeMeta = vi.fn(async (_fileName: string, _content: string) => {})
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({
+        readEpisodeMeta: async () => JSON.stringify({ sceneMetrics: existingMetrics() }),
+        writeEpisodeMeta,
+      }),
+      episodeFileName: 'script.fountain',
+    })
+
+    renderPulsoScreen()
+
+    const rows = await screen.findAllByRole('row')
+    await userEvent.click(within(rows[1]).getByRole('button', { name: 'Descartar' }))
+
+    expect(await screen.findAllByRole('row')).toHaveLength(3)
+    expect(writeEpisodeMeta).not.toHaveBeenCalled()
+
+    vi.restoreAllMocks()
   })
 })

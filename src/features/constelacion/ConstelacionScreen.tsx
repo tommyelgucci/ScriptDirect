@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
 import { characterSchema, type Character, type CharacterTraits } from '../../entities/character'
 import { locationSchema, type Location } from '../../entities/location'
+import { useTranslation } from '../../shared/i18n/useTranslation'
 import { safeParseJson } from '../../shared/json/safeParseJson'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { CharacterTraitsEditor } from './CharacterTraitsEditor'
@@ -14,6 +15,7 @@ function sortBySceneCount<T extends { name: string; sceneIds: string[] }>(items:
 }
 
 export function ConstelacionScreen() {
+  const t = useTranslation()
   const project = useAppStore((state) => state.project)
   const [characters, setCharacters] = useState<Character[] | null>(null)
   const [locations, setLocations] = useState<Location[] | null>(null)
@@ -59,25 +61,22 @@ export function ConstelacionScreen() {
   return (
     <main className="constelacion-screen">
       <Link to="/editor" className="constelacion-screen__back">
-        ← Volver al guion
+        {t.common.backToScript}
       </Link>
-      <h1>Constelación</h1>
-      <p>
-        Personajes y locaciones detectados automáticamente en el guion. Esta es la base de datos que más adelante
-        alimentará el grafo de relaciones.
-      </p>
+      <h1>{t.constelacion.title}</h1>
+      <p>{t.constelacion.subtitle}</p>
 
       <section>
-        <h2>Personajes</h2>
-        {characters === null && <p className="constelacion-screen__loading">Cargando…</p>}
-        {characters?.length === 0 && <p className="constelacion-screen__empty">Todavía no hay personajes.</p>}
+        <h2>{t.constelacion.characters}</h2>
+        {characters === null && <p className="constelacion-screen__loading">{t.constelacion.loading}</p>}
+        {characters?.length === 0 && <p className="constelacion-screen__empty">{t.constelacion.noCharacters}</p>}
         {characters && characters.length > 0 && (
           <table>
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Grupo</th>
-                <th>Escenas</th>
+                <th>{t.constelacion.name}</th>
+                <th>{t.constelacion.group}</th>
+                <th>{t.constelacion.scenes}</th>
               </tr>
             </thead>
             <tbody>
@@ -116,15 +115,15 @@ export function ConstelacionScreen() {
       </section>
 
       <section>
-        <h2>Locaciones</h2>
-        {locations === null && <p className="constelacion-screen__loading">Cargando…</p>}
-        {locations?.length === 0 && <p className="constelacion-screen__empty">Todavía no hay locaciones.</p>}
+        <h2>{t.constelacion.locations}</h2>
+        {locations === null && <p className="constelacion-screen__loading">{t.constelacion.loading}</p>}
+        {locations?.length === 0 && <p className="constelacion-screen__empty">{t.constelacion.noLocations}</p>}
         {locations && locations.length > 0 && (
           <table>
             <thead>
               <tr>
-                <th>Locación</th>
-                <th>Escenas</th>
+                <th>{t.constelacion.location}</th>
+                <th>{t.constelacion.scenes}</th>
               </tr>
             </thead>
             <tbody>

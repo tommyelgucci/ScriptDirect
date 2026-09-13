@@ -5,6 +5,7 @@ import { ensureSceneIds, parseFountainDocument } from '../../shared/fountain'
 import { ZipProjectFileSystem } from '../../shared/fs'
 import { downloadBlob } from '../../shared/pdf/downloadBlob'
 import { exportScreenplayPdf } from '../../shared/pdf/exportScreenplayPdf'
+import { useTranslation } from '../../shared/i18n/useTranslation'
 import { useAppStore } from '../../shared/store/useAppStore'
 import type { ProjectSession } from '../../shared/store/useAppStore'
 import { createAutosaveScheduler } from './autosaveScheduler'
@@ -27,6 +28,15 @@ interface PendingSave {
 }
 
 export function EditorScreen() {
+  const t = useTranslation()
+  // Read inside the script-loading effect below via this ref, not `t`
+  // directly: the effect must only re-run when `project` changes, never when
+  // the writer toggles the language mid-edit — re-running it would re-read
+  // the script from disk and clobber whatever unsaved text is in the editor.
+  const tRef = useRef(t)
+  useEffect(() => {
+    tRef.current = t
+  })
   const project = useAppStore((state) => state.project)
   const closeProject = useAppStore((state) => state.closeProject)
 
@@ -69,7 +79,7 @@ export function EditorScreen() {
           return
         }
         if (!cancelled) {
-          setLoadError('No se pudo abrir el guion de este proyecto.')
+          setLoadError(tRef.current.editor.loadError)
         }
       }
     }
@@ -131,13 +141,13 @@ export function EditorScreen() {
     if (!project || !content) {
       return
     }
-    const promptResult = window.prompt('Etiqueta para esta versión (opcional):')
+    const promptResult = window.prompt(t.editor.versionLabelPrompt)
     if (promptResult === null) {
       return // user cancelled
     }
     const text = ensureSceneIds(tiptapDocToFountainText(content))
     await createVersionSnapshot(project.fileSystem, project.episodeFileName, text, promptResult.trim() || undefined)
-  }, [project, content])
+  }, [project, content, t])
 
   const handleSelectScene = useCallback((sceneId: string) => {
     const editor = editorRef.current
@@ -166,7 +176,7 @@ export function EditorScreen() {
   if (!content) {
     return (
       <main className="editor-screen editor-screen--loading">
-        <p>Cargando guion…</p>
+        <p>{t.editor.loadingScript}</p>
       </main>
     )
   }
@@ -178,31 +188,31 @@ export function EditorScreen() {
       <header className="editor-screen__header">
         <span>{project.fileSystem.projectName}</span>
         <span className="editor-screen__status">
-          {saveStatus === 'saving' && 'Guardando…'}
-          {saveStatus === 'saved' && 'Guardado'}
-          {saveStatus === 'error' && 'Error al guardar'}
+          {saveStatus === 'saving' && t.editor.saving}
+          {saveStatus === 'saved' && t.editor.saved}
+          {saveStatus === 'error' && t.editor.saveError}
         </span>
-        <Link to="/episodios">Episodios</Link>
-        <Link to="/brujula">Brújula</Link>
-        <Link to="/constelacion">Constelación</Link>
-        <Link to="/pulso">Pulso</Link>
-        <Link to="/ruta">Ruta</Link>
-        <Link to="/cuaderno">Cuaderno</Link>
-        <Link to="/historial">Historial</Link>
-        <Link to="/settings">Configuración</Link>
+        <Link to="/episodios">{t.editor.navEpisodes}</Link>
+        <Link to="/brujula">{t.editor.navBrujula}</Link>
+        <Link to="/constelacion">{t.editor.navConstelacion}</Link>
+        <Link to="/pulso">{t.editor.navPulso}</Link>
+        <Link to="/ruta">{t.editor.navRuta}</Link>
+        <Link to="/cuaderno">{t.editor.navCuaderno}</Link>
+        <Link to="/historial">{t.editor.navHistorial}</Link>
+        <Link to="/settings">{t.editor.navSettings}</Link>
         <button type="button" onClick={handleSaveVersion}>
-          Guardar versión
+          {t.editor.saveVersion}
         </button>
         <button type="button" onClick={handleExportPdf}>
-          Exportar PDF
+          {t.editor.exportPdf}
         </button>
         {project.fileSystem instanceof ZipProjectFileSystem && (
           <button type="button" onClick={handleExportZip}>
-            Exportar .zip (guardar)
+            {t.editor.exportZip}
           </button>
         )}
         <button type="button" onClick={closeProject}>
-          Cerrar proyecto
+          {t.editor.closeProject}
         </button>
       </header>
       <div className="editor-screen__body">

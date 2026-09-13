@@ -18,4 +18,12 @@ Scene metrics persist to the episode's sidecar `*.meta.json`
 clobbered. Re-running "Analizar" replaces the metrics with a fresh set — no
 history of past runs yet, matching Brújula's current scope.
 
+- The table below the chart gives each scene "Editar"/"Descartar" controls —
+  the AI can misjudge a scene, and hand-correcting or dropping just that one
+  (`SceneMetricEditor.tsx`) is a lot cheaper than paying for and waiting on a
+  full re-analysis. Mirrors Brújula's per-finding accept/dismiss controls,
+  adapted to Pulso's numeric scores (0-100 sliders instead of accept/reject
+  on free text). Both actions persist immediately through the same
+  `updateEpisodeMeta` path as a fresh analysis.
+
 See `src/shared/ai/README.md` for the provider adapters themselves.

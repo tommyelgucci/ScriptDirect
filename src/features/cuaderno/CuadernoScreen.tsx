@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import type { CuadernoDocument } from '../../entities/cuaderno-document'
+import { useTranslation } from '../../shared/i18n/useTranslation'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { createCuadernoDocument, deleteCuadernoDocument, listCuadernoDocuments, updateCuadernoDocument } from './cuadernoStorage'
 import './CuadernoScreen.css'
@@ -14,6 +15,7 @@ interface PendingSave {
 }
 
 export function CuadernoScreen() {
+  const t = useTranslation()
   const project = useAppStore((state) => state.project)
   const [documents, setDocuments] = useState<CuadernoDocument[] | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -117,15 +119,15 @@ export function CuadernoScreen() {
   return (
     <main className="cuaderno-screen">
       <Link to="/editor" className="cuaderno-screen__back">
-        ← Volver al guion
+        {t.common.backToScript}
       </Link>
-      <h1>Cuaderno</h1>
-      <p>Documentos de desarrollo: biografías, worldbuilding, notas de investigación — lo que no cabe en una escena.</p>
+      <h1>{t.cuaderno.title}</h1>
+      <p>{t.cuaderno.subtitle}</p>
 
       <div className="cuaderno-screen__body">
         <aside className="cuaderno-screen__sidebar">
-          {documents === null && <p>Cargando…</p>}
-          {documents?.length === 0 && <p className="cuaderno-screen__empty">Todavía no hay documentos.</p>}
+          {documents === null && <p>{t.cuaderno.loading}</p>}
+          {documents?.length === 0 && <p className="cuaderno-screen__empty">{t.cuaderno.empty}</p>}
           <ul className="cuaderno-screen__list">
             {documents?.map((document) => (
               <li key={document.id}>
@@ -142,16 +144,16 @@ export function CuadernoScreen() {
 
           <form className="cuaderno-screen__create" onSubmit={handleCreate}>
             <label>
-              Nuevo documento
+              {t.cuaderno.newDocument}
               <input
                 type="text"
                 value={newTitle}
                 onChange={(event) => setNewTitle(event.target.value)}
-                placeholder="p. ej. Biografía de Rick"
+                placeholder={t.cuaderno.newDocumentPlaceholder}
               />
             </label>
             <button type="submit" disabled={!newTitle.trim()}>
-              Crear
+              {t.cuaderno.create}
             </button>
           </form>
         </aside>
@@ -160,7 +162,7 @@ export function CuadernoScreen() {
           <section className="cuaderno-screen__editor">
             <input
               type="text"
-              aria-label="Título del documento"
+              aria-label={t.cuaderno.titleInputLabel}
               className="cuaderno-screen__title-input"
               value={draftTitle}
               onChange={(event) => {
@@ -170,7 +172,7 @@ export function CuadernoScreen() {
               onBlur={flushPendingSave}
             />
             <textarea
-              aria-label="Contenido del documento"
+              aria-label={t.cuaderno.contentInputLabel}
               value={draftContent}
               onChange={(event) => {
                 setDraftContent(event.target.value)
@@ -179,7 +181,7 @@ export function CuadernoScreen() {
               onBlur={flushPendingSave}
             />
             <button type="button" onClick={handleDelete} className="cuaderno-screen__delete">
-              Eliminar documento
+              {t.cuaderno.deleteDocument}
             </button>
           </section>
         )}

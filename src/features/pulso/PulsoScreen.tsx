@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Link, Navigate } from 'react-router-dom'
 import type { SceneMetric } from '../../entities/scene-metric'
@@ -11,6 +11,7 @@ import { safeParseJson } from '../../shared/json/safeParseJson'
 import { useAppStore } from '../../shared/store/useAppStore'
 import { buildSceneMetrics } from './buildSceneMetrics'
 import './PulsoScreen.css'
+import { SceneMetricEditor } from './SceneMetricEditor'
 
 interface ChartPoint {
   sceneId: string
@@ -41,6 +42,7 @@ export function PulsoScreen() {
   const [headingsBySceneId, setHeadingsBySceneId] = useState<Map<string, string>>(new Map())
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [editingSceneId, setEditingSceneId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!project) {
@@ -112,6 +114,26 @@ export function PulsoScreen() {
     }
   }
 
+  // The AI can misjudge a scene — this lets the writer correct its scores by hand instead of
+  // having to pay for and wait on a full re-analysis just to fix one value (mirrors Brújula's
+  // per-finding review controls, adapted to Pulso's numeric scores).
+  async function handleSaveMetric(updated: SceneMetric) {
+    const nextMetrics = metrics.map((metric) => (metric.sceneId === updated.sceneId ? updated : metric))
+    setMetrics(nextMetrics)
+    setEditingSceneId(null)
+    await persistMetrics(nextMetrics)
+  }
+
+  async function handleDismissMetric(sceneId: string) {
+    const confirmed = window.confirm('¿Descartar el análisis de esta escena? Se puede volver a analizar el guion completo cuando quieras.')
+    if (!confirmed) {
+      return
+    }
+    const nextMetrics = metrics.filter((metric) => metric.sceneId !== sceneId)
+    setMetrics(nextMetrics)
+    await persistMetrics(nextMetrics)
+  }
+
   if (!project) {
     return <Navigate to="/" replace />
   }
@@ -161,6 +183,54 @@ export function PulsoScreen() {
             </LineChart>
           </ResponsiveContainer>
         </div>
+      )}
+
+      {metrics.length > 0 && (
+        <table className="pulso-screen__table">
+          <thead>
+            <tr>
+              <th>Escena</th>
+              <th>Intensidad emocional</th>
+              <th>Tensión dramática</th>
+              <th>Captación de atención</th>
+              <th>Potencial comercial</th>
+              <th>Emoción dominante</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {metrics.map((metric, index) => (
+              <Fragment key={metric.sceneId}>
+                <tr>
+                  <td>{headingsBySceneId.get(metric.sceneId) ?? `Escena ${index + 1}`}</td>
+                  <td>{metric.emotionalIntensity}</td>
+                  <td>{metric.dramaticTension}</td>
+                  <td>{metric.attentionCapture}</td>
+                  <td>{metric.commercialPotential}</td>
+                  <td>{metric.dominantEmotion}</td>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => setEditingSceneId(editingSceneId === metric.sceneId ? null : metric.sceneId)}
+                    >
+                      {editingSceneId === metric.sceneId ? 'Cerrar' : 'Editar'}
+                    </button>
+                    <button type="button" onClick={() => handleDismissMetric(metric.sceneId)}>
+                      Descartar
+                    </button>
+                  </td>
+                </tr>
+                {editingSceneId === metric.sceneId && (
+                  <tr>
+                    <td colSpan={7}>
+                      <SceneMetricEditor metric={metric} onSave={handleSaveMetric} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
       )}
     </main>
   )

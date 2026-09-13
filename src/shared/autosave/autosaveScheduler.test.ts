@@ -136,4 +136,47 @@ describe('createAutosaveScheduler — flush()', () => {
 
     expect(order).toEqual(['start:first', 'end:first', 'start:second', 'end:second'])
   })
+
+  // Codex's review flagged this: if save A is still in flight when a newer
+  // edit B is scheduled, A finishing must not report 'saved' — B is the
+  // latest truth and it's still unsaved. Reporting 'saved' there would
+  // flash a false "Guardado" in the UI until B eventually finishes too.
+  it('does not report "saved" for an older save if a newer edit was scheduled before it finished', async () => {
+    const onStatusChange = vi.fn()
+    let resolveFirstSave: (() => void) | undefined
+    const save = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFirstSave = resolve
+        }),
+    )
+    const scheduler = createAutosaveScheduler(save, 800, onStatusChange)
+
+    scheduler.schedule('first')
+    const firstFlush = scheduler.flush()
+    await Promise.resolve()
+
+    scheduler.schedule('second') // a newer, still-unsaved edit arrives while 'first' is in flight
+
+    resolveFirstSave?.()
+    await firstFlush
+
+    expect(onStatusChange).not.toHaveBeenCalledWith('saved')
+    // The last call is still 'saving', from scheduling 'second' — 'first' resolving afterward reported nothing.
+    expect(onStatusChange).toHaveBeenLastCalledWith('saving')
+  })
+
+  it('does report "saved" once the actual latest edit finishes', async () => {
+    const onStatusChange = vi.fn()
+    const scheduler = createAutosaveScheduler(async () => {}, 800, onStatusChange)
+
+    scheduler.schedule('first')
+    await scheduler.flush()
+    onStatusChange.mockClear()
+
+    scheduler.schedule('second')
+    await scheduler.flush()
+
+    expect(onStatusChange).toHaveBeenLastCalledWith('saved')
+  })
 })

@@ -197,4 +197,61 @@ describe('CuadernoScreen', () => {
     )
     expect(screen.getByLabelText('Contenido del documento')).toHaveValue('Otro contenido')
   })
+
+  // Codex's review flagged that updateCuadernoDocument() isn't atomic (reads
+  // cuaderno.json, maps over it, rewrites the whole file), so firing a
+  // second one while the first is still in flight — e.g. typing resumes
+  // right as the debounce fires, then the field blurs — let both read the
+  // same stale snapshot; whichever write lands second clobbers the other's
+  // edit. This confirms the writes are now serialized instead.
+  it('does not lose an edit when a write is still in flight when another is triggered', async () => {
+    const order: string[] = []
+    let resolveFirstWrite: (() => void) | undefined
+    let callCount = 0
+    const writeCuadernoJson = vi.fn((_content: string) => {
+      callCount += 1
+      const label = `write${callCount}`
+      order.push(`start:${label}`)
+      if (callCount === 1) {
+        return new Promise<void>((resolve) => {
+          resolveFirstWrite = () => {
+            order.push(`end:${label}`)
+            resolve()
+          }
+        })
+      }
+      order.push(`end:${label}`)
+      return Promise.resolve()
+    })
+    useAppStore.getState().openProject({
+      fileSystem: fakeFileSystem({
+        readCuadernoJson: async () => JSON.stringify([EXISTING_DOCUMENT]),
+        writeCuadernoJson,
+      }),
+      episodeFileName: 'script.fountain',
+    })
+
+    renderCuadernoScreen()
+    await userEvent.click(await screen.findByRole('button', { name: 'Biografía de Rick' }))
+    const contentField = screen.getByLabelText('Contenido del documento')
+
+    await userEvent.type(contentField, ' Uno.')
+    await userEvent.tab() // blurs, flushing the first write — it stays in flight (paused above)
+    await waitFor(() => expect(writeCuadernoJson).toHaveBeenCalledTimes(1))
+
+    await userEvent.click(contentField)
+    await userEvent.type(contentField, ' Dos.')
+    await userEvent.tab() // a second write is requested while the first is still unresolved
+
+    // The second write must not have started yet: it has to wait for the first to finish.
+    expect(writeCuadernoJson).toHaveBeenCalledTimes(1)
+
+    resolveFirstWrite?.()
+    await waitFor(() => expect(writeCuadernoJson).toHaveBeenCalledTimes(2))
+
+    // No interleaving: write1 fully completes before write2 ever starts.
+    expect(order).toEqual(['start:write1', 'end:write1', 'start:write2', 'end:write2'])
+    const finalContent = JSON.parse(writeCuadernoJson.mock.calls[1][0])[0].content
+    expect(finalContent).toBe('Un genio alcohólico y nihilista. Uno. Dos.')
+  })
 })

@@ -112,6 +112,14 @@ export function PulsoScreen() {
 
       const nextMetrics = buildSceneMetrics(rawMetrics, validSceneIds)
       setMetrics(nextMetrics)
+      // A re-analysis can return a fresh score for a scene whose editor row
+      // is still open. Since it keeps the same sceneId, React reuses that
+      // same SceneMetricEditor instance (same key) instead of remounting it,
+      // so its local draft would otherwise keep showing the pre-reanalysis
+      // values — and saving it would silently overwrite the new AI result
+      // with stale data (Codex). Closing any open editor here means a
+      // reanalysis always starts from a clean slate.
+      setEditingSceneId(null)
       await persistMetrics(nextMetrics)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : t.pulso.analysisFailed)

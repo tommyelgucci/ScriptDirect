@@ -1,16 +1,9 @@
 import { useState } from 'react'
 import type { Character, CharacterTraits } from '../../entities/character'
+import { useTranslation } from '../../shared/i18n/useTranslation'
+import type { Translations } from '../../shared/i18n/es'
 
-interface TraitField {
-  key: keyof CharacterTraits
-  label: string
-}
-
-const TRAIT_FIELDS: TraitField[] = [
-  { key: 'empathy', label: 'Empatía' },
-  { key: 'moralAmbiguity', label: 'Ambigüedad moral' },
-  { key: 'volatility', label: 'Volatilidad' },
-]
+const TRAIT_KEYS: (keyof CharacterTraits)[] = ['empathy', 'moralAmbiguity', 'volatility']
 
 const DEFAULT_TRAIT_VALUE = 50
 
@@ -20,6 +13,7 @@ interface CharacterTraitsEditorProps {
 }
 
 export function CharacterTraitsEditor({ character, onSave }: CharacterTraitsEditorProps) {
+  const t = useTranslation()
   const [draft, setDraft] = useState<CharacterTraits>(character.traits ?? {})
 
   function handleChange(key: keyof CharacterTraits, value: number) {
@@ -28,23 +22,26 @@ export function CharacterTraitsEditor({ character, onSave }: CharacterTraitsEdit
 
   return (
     <div className="character-traits-editor">
-      {TRAIT_FIELDS.map(({ key, label }) => (
-        <label key={key}>
-          <span>
-            {label}: {draft[key] ?? DEFAULT_TRAIT_VALUE}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={draft[key] ?? DEFAULT_TRAIT_VALUE}
-            onChange={(event) => handleChange(key, Number(event.target.value))}
-            aria-label={label}
-          />
-        </label>
-      ))}
+      {TRAIT_KEYS.map((key) => {
+        const label = t.characterTraitsEditor[key as keyof Translations['characterTraitsEditor']]
+        return (
+          <label key={key}>
+            <span>
+              {label}: {draft[key] ?? DEFAULT_TRAIT_VALUE}
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={draft[key] ?? DEFAULT_TRAIT_VALUE}
+              onChange={(event) => handleChange(key, Number(event.target.value))}
+              aria-label={label}
+            />
+          </label>
+        )
+      })}
       <button type="button" onClick={() => onSave(draft)}>
-        Guardar
+        {t.common.save}
       </button>
     </div>
   )

@@ -1,18 +1,9 @@
 import { useState } from 'react'
 import type { SceneMetric } from '../../entities/scene-metric'
+import { useTranslation } from '../../shared/i18n/useTranslation'
 import './SceneMetricEditor.css'
 
-interface ScoreField {
-  key: 'emotionalIntensity' | 'dramaticTension' | 'attentionCapture' | 'commercialPotential'
-  label: string
-}
-
-const SCORE_FIELDS: ScoreField[] = [
-  { key: 'emotionalIntensity', label: 'Intensidad emocional' },
-  { key: 'dramaticTension', label: 'Tensión dramática' },
-  { key: 'attentionCapture', label: 'Captación de atención' },
-  { key: 'commercialPotential', label: 'Potencial comercial' },
-]
+const SCORE_KEYS = ['emotionalIntensity', 'dramaticTension', 'attentionCapture', 'commercialPotential'] as const
 
 interface SceneMetricEditorProps {
   metric: SceneMetric
@@ -21,40 +12,44 @@ interface SceneMetricEditorProps {
 
 /** A human correction to one scene's AI-generated scores, mirroring Constelación's CharacterTraitsEditor. */
 export function SceneMetricEditor({ metric, onSave }: SceneMetricEditorProps) {
+  const t = useTranslation()
   const [draft, setDraft] = useState<SceneMetric>(metric)
 
-  function handleScoreChange(key: ScoreField['key'], value: number) {
+  function handleScoreChange(key: (typeof SCORE_KEYS)[number], value: number) {
     setDraft((previous) => ({ ...previous, [key]: value }))
   }
 
   return (
     <div className="scene-metric-editor">
-      {SCORE_FIELDS.map(({ key, label }) => (
-        <label key={key}>
-          <span>
-            {label}: {draft[key]}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={draft[key]}
-            onChange={(event) => handleScoreChange(key, Number(event.target.value))}
-            aria-label={label}
-          />
-        </label>
-      ))}
+      {SCORE_KEYS.map((key) => {
+        const label = t.pulso[key]
+        return (
+          <label key={key}>
+            <span>
+              {label}: {draft[key]}
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={draft[key]}
+              onChange={(event) => handleScoreChange(key, Number(event.target.value))}
+              aria-label={label}
+            />
+          </label>
+        )
+      })}
       <label>
-        <span>Emoción dominante</span>
+        <span>{t.sceneMetricEditor.dominantEmotion}</span>
         <input
           type="text"
           value={draft.dominantEmotion}
           onChange={(event) => setDraft((previous) => ({ ...previous, dominantEmotion: event.target.value }))}
-          aria-label="Emoción dominante"
+          aria-label={t.sceneMetricEditor.dominantEmotion}
         />
       </label>
       <button type="button" onClick={() => onSave(draft)} disabled={draft.dominantEmotion.trim() === ''}>
-        Guardar
+        {t.sceneMetricEditor.save}
       </button>
     </div>
   )

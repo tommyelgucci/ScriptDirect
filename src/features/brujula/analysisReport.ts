@@ -4,12 +4,8 @@ import type { AnalysisSections } from '../../shared/ai/types'
 
 export type FindingSection = 'strengths' | 'mainIssues' | 'missingOrExcess' | 'rewritePlan'
 
-export const FINDING_SECTIONS: { key: FindingSection; label: string }[] = [
-  { key: 'strengths', label: 'Fortalezas' },
-  { key: 'mainIssues', label: 'Problemas principales' },
-  { key: 'missingOrExcess', label: 'Qué falta o sobra' },
-  { key: 'rewritePlan', label: 'Plan de reescritura' },
-]
+/** Display order for the report's sections — labels live in shared/i18n so they follow the UI language toggle. */
+export const FINDING_SECTIONS: FindingSection[] = ['strengths', 'mainIssues', 'missingOrExcess', 'rewritePlan']
 
 export function buildAnalysisReport(sections: AnalysisSections): AnalysisReport {
   return analysisReportSchema.parse({

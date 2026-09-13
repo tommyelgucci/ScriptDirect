@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ensureSceneIds, parseFountainDocument } from '../../shared/fountain'
+import { useTranslation } from '../../shared/i18n/useTranslation'
 import { useAppStore } from '../../shared/store/useAppStore'
 import './VersionHistoryScreen.css'
 import { scenesToTiptapDoc } from './fountainTiptap'
@@ -12,6 +13,7 @@ function formatDate(iso: string): string {
 }
 
 export function VersionHistoryScreen() {
+  const t = useTranslation()
   const project = useAppStore((state) => state.project)
   const navigate = useNavigate()
 
@@ -61,16 +63,19 @@ export function VersionHistoryScreen() {
     if (!project) {
       return
     }
-    const confirmed = window.confirm(
-      `¿Restaurar la versión del ${formatDate(version.createdAt)}? El guion actual se guarda primero como una versión nueva, así que nada se pierde.`,
-    )
+    const confirmed = window.confirm(t.versionHistory.restoreConfirm(formatDate(version.createdAt)))
     if (!confirmed) {
       return
     }
     setIsRestoring(true)
     try {
       if (currentScriptText) {
-        await createVersionSnapshot(project.fileSystem, project.episodeFileName, currentScriptText, 'Antes de restaurar')
+        await createVersionSnapshot(
+          project.fileSystem,
+          project.episodeFileName,
+          currentScriptText,
+          t.versionHistory.restoreSnapshotLabel,
+        )
       }
       const text = await readVersionContent(project.fileSystem, project.episodeFileName, version)
       const doc = scenesToTiptapDoc(parseFountainDocument(ensureSceneIds(text)))
@@ -88,16 +93,12 @@ export function VersionHistoryScreen() {
   return (
     <main className="version-history-screen">
       <Link to="/editor" className="version-history-screen__back">
-        ← Volver al guion
+        {t.common.backToScript}
       </Link>
-      <h1>Historial de versiones</h1>
+      <h1>{t.versionHistory.title}</h1>
 
-      {versions === null && <p className="version-history-screen__loading">Cargando…</p>}
-      {versions?.length === 0 && (
-        <p className="version-history-screen__empty">
-          Todavía no has guardado ninguna versión. Usa "Guardar versión" en el editor para crear la primera.
-        </p>
-      )}
+      {versions === null && <p className="version-history-screen__loading">{t.versionHistory.loading}</p>}
+      {versions?.length === 0 && <p className="version-history-screen__empty">{t.versionHistory.empty}</p>}
 
       <ul className="version-history-screen__list">
         {versions?.map((version) => (
@@ -109,10 +110,10 @@ export function VersionHistoryScreen() {
               </div>
               <div className="version-history-screen__actions">
                 <button type="button" onClick={() => handleToggleDiff(version)}>
-                  {diffAgainstId === version.id ? 'Ocultar diferencias' : 'Ver diferencias'}
+                  {diffAgainstId === version.id ? t.versionHistory.hideDiff : t.versionHistory.showDiff}
                 </button>
                 <button type="button" onClick={() => handleRestore(version)} disabled={isRestoring}>
-                  Restaurar
+                  {t.versionHistory.restore}
                 </button>
               </div>
             </div>

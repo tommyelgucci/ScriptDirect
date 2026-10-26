@@ -2,6 +2,31 @@
 
 Session log and recent decisions. Newest entries on top.
 
+## 2026-10-26 — PWA support and route code-splitting (branch `claude/pwa-support`)
+
+State check first: `main` had 331 passing tests, clean lint and build, and
+every MVP and Phase 2+ item in `ROADMAP.md` built. Two gaps found and closed:
+
+- **PWA was promised but missing.** `ARCHITECTURE.md` says "installable,
+  offline-capable", but `public/` only held a favicon. Added a web manifest,
+  192/512 px icons (from the Tauri icons), a minimal same-origin service worker
+  (`public/sw.js`) and production-only registration that skips dev and the
+  Tauri shell. Cross-origin requests (AI provider APIs) are never intercepted
+  or cached. Verified in real Chromium: reload while offline still renders.
+  Not verified: the install prompt on a real desktop/mobile browser, and how the
+  icons look when masked on Android.
+- **1.5 MB entry bundle.** Route screens are now `lazy()` loaded; initial JS is
+  304 kB (was 1,553 kB). Editor (745 kB) and Pulso (370 kB) remain large chunks.
+  Side effect: the service worker caches a screen only after it is first
+  opened, so a first-time offline visit has only what was already visited.
+  Precaching the lazy chunks would fix that.
+
+**Still open:** the differentiator decision (see `ROADMAP.md`, "Competitive
+landscape check"; `ARCHITECTURE.md`'s Differentiators list is stale), real-device
+Tauri testing (OS keychain, UI), and three old remote branches
+(`claude/fix-codex-findings`, `-round2`, `session-work`) that still show commits
+ahead of `main` but were likely squash-merged; confirm before deleting.
+
 ## 2026-09-13 — All 5 confirmed-still-live Codex findings fixed, easiest to hardest
 
 Went through Codex's review comments across every historical PR, verified

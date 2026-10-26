@@ -1,18 +1,22 @@
+import { lazy, Suspense } from 'react'
 import { HashRouter, Route, Routes } from 'react-router-dom'
-import { EditorScreen } from '../features/bitacora/EditorScreen'
-import { VersionHistoryScreen } from '../features/bitacora/VersionHistoryScreen'
-import { BrujulaScreen } from '../features/brujula/BrujulaScreen'
-import { ConstelacionScreen } from '../features/constelacion/ConstelacionScreen'
-import { CuadernoScreen } from '../features/cuaderno/CuadernoScreen'
-import { EpisodesScreen } from '../features/episodes/EpisodesScreen'
-import { PulsoScreen } from '../features/pulso/PulsoScreen'
-import { RutaScreen } from '../features/ruta/RutaScreen'
-import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { HomeScreen } from './HomeScreen'
+
+// Screens load on demand so heavy deps (Recharts, force graph, Tiptap, pdf-lib) stay out of the first paint.
+const EditorScreen = lazy(() => import('../features/bitacora/EditorScreen').then((m) => ({ default: m.EditorScreen })))
+const VersionHistoryScreen = lazy(() => import('../features/bitacora/VersionHistoryScreen').then((m) => ({ default: m.VersionHistoryScreen })))
+const BrujulaScreen = lazy(() => import('../features/brujula/BrujulaScreen').then((m) => ({ default: m.BrujulaScreen })))
+const ConstelacionScreen = lazy(() => import('../features/constelacion/ConstelacionScreen').then((m) => ({ default: m.ConstelacionScreen })))
+const CuadernoScreen = lazy(() => import('../features/cuaderno/CuadernoScreen').then((m) => ({ default: m.CuadernoScreen })))
+const EpisodesScreen = lazy(() => import('../features/episodes/EpisodesScreen').then((m) => ({ default: m.EpisodesScreen })))
+const PulsoScreen = lazy(() => import('../features/pulso/PulsoScreen').then((m) => ({ default: m.PulsoScreen })))
+const RutaScreen = lazy(() => import('../features/ruta/RutaScreen').then((m) => ({ default: m.RutaScreen })))
+const SettingsScreen = lazy(() => import('../features/settings/SettingsScreen').then((m) => ({ default: m.SettingsScreen })))
 
 function App() {
   return (
     <HashRouter>
+      <Suspense fallback={null}>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/episodios" element={<EpisodesScreen />} />
@@ -25,6 +29,7 @@ function App() {
         <Route path="/cuaderno" element={<CuadernoScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
       </Routes>
+      </Suspense>
     </HashRouter>
   )
 }

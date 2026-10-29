@@ -17,15 +17,18 @@ every MVP and Phase 2+ item in `ROADMAP.md` built. Two gaps found and closed:
   icons look when masked on Android.
 - **1.5 MB entry bundle.** Route screens are now `lazy()` loaded; initial JS is
   304 kB (was 1,553 kB). Editor (745 kB) and Pulso (370 kB) remain large chunks.
-  Side effect: the service worker caches a screen only after it is first
-  opened, so a first-time offline visit has only what was already visited.
-  Precaching the lazy chunks would fix that.
+  To keep first-visit offline working, a build plugin (`precacheManifest` in
+  `vite.config.ts`) injects every built asset into `dist/sw.js`'s precache list.
+  Gotcha found by testing in real Chromium: precached entries need
+  `caches.match(..., { ignoreVary: true })`, otherwise module scripts (CORS
+  requests) miss the cache and the offline page is blank.
 
 **Still open:** the differentiator decision (see `ROADMAP.md`, "Competitive
 landscape check"; `ARCHITECTURE.md`'s Differentiators list is stale), real-device
 Tauri testing (OS keychain, UI), and three old remote branches
-(`claude/fix-codex-findings`, `-round2`, `session-work`) that still show commits
-ahead of `main` but were likely squash-merged; confirm before deleting.
+(`claude/fix-codex-findings`, `-round2`, `session-work`): verified their content is
+already in `main` (round2 is tree-identical; key files of the others match), safe to
+delete once the owner agrees.
 
 ## 2026-09-13 — All 5 confirmed-still-live Codex findings fixed, easiest to hardest
 

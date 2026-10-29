@@ -1,10 +1,12 @@
 // Minimal offline support: cache the app shell and same-origin assets.
 // Cross-origin requests (AI provider APIs) are never intercepted or cached.
-const CACHE = 'scriptdirect-v1'
+const CACHE = 'scriptdirect-v2'
+// Filled in at build time by the precache-manifest plugin in vite.config.ts.
+const PRECACHE_ASSETS = [] /* __PRECACHE_ASSETS__ */
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(['/', '/favicon.svg', '/manifest.webmanifest'])),
+    caches.open(CACHE).then((cache) => cache.addAll(['/', '/favicon.svg', '/manifest.webmanifest', ...PRECACHE_ASSETS])),
   )
   self.skipWaiting()
 })
@@ -39,7 +41,8 @@ self.addEventListener('fetch', (event) => {
 
   // Hashed build assets are immutable: cache first, fill on miss.
   event.respondWith(
-    caches.match(request).then(
+    // ignoreVary: precached entries were stored without an Origin header, but module scripts request with CORS.
+    caches.match(request, { ignoreVary: true }).then(
       (cached) =>
         cached ||
         fetch(request).then((response) => {

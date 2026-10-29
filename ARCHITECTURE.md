@@ -26,19 +26,27 @@ while the writer stays in full control of every decision.
 
 ## Differentiators (why this exists instead of using an existing tool)
 
-- **Spanish-first market.** Final Draft, WriterDuet, Arc Studio, Storyflow,
-  Inkshift — none seriously support Spanish. UI defaults to Spanish.
-- **Local-first / offline.** A project is a folder on disk, not a row in
-  someone else's database. Works without internet once loaded.
-- **BYOK (Bring Your Own Key).** The user supplies their own AI provider key
-  (Anthropic, OpenAI, Gemini, or local via Ollama). No AI costs are routed
-  through our servers, which is what makes "free for writing" sustainable.
-- **No vendor lock-in.** Scripts are stored in Fountain, an open plain-text
-  screenplay format readable by Highland, Slugline, Trelby, Fade In, Celtx,
-  Scrite, and others.
-- **Emotional/tension metrics per scene ("Pulso").** Not offered by any
-  competitor surveyed (Final Draft, WriterDuet, Fade In, Arc Studio, Scrite,
-  Inkshift, Storyflow, Laper.ai, FinalBit, ScriptDraft).
+Updated 2026-10-29 after the competitive check logged in `ROADMAP.md`. A
+close-to-beta competitor appears to match Spanish-first, local-first, BYOK and
+per-scene metrics, so those are now **table stakes**, not differentiators.
+
+**Primary wedge: open-format ownership (Fountain).** A project is a folder of
+plain-text Fountain files plus hand-editable JSON sidecars. It opens in
+Highland, Slugline, Trelby, Fade In, Celtx and Scrite with no export step, is
+diffable in git, and survives the app disappearing. `[[id:]]` notes are ignored
+by other Fountain apps, and cross-app compatibility is covered by tests. We
+have not been able to confirm the competitor lacks this, so treat it as a
+bet to validate, not a proven moat.
+
+**Secondary wedge: true native desktop (Tauri).** OS keychain for API keys and
+real folder access on every OS, versus a browser-installed PWA. The PWA stays
+as the zero-install entry point.
+
+**Table stakes (still required, no longer unique):**
+- Spanish-first UI (ES default, EN toggle).
+- Local-first / offline.
+- BYOK (Anthropic, OpenAI, Gemini, Ollama).
+- Per-scene emotional/tension metrics ("Pulso").
 
 ## Feature Naming
 

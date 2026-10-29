@@ -23,9 +23,10 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /abrir carpeta de proyecto/i })).toBeInTheDocument()
   })
 
-  it('redirects /editor back to home when no project is open', () => {
+  it('redirects /editor back to home when no project is open', async () => {
     window.location.hash = '#/editor'
     render(<App />)
-    expect(screen.getByRole('button', { name: /abrir carpeta de proyecto/i })).toBeInTheDocument()
+    // The editor screen is lazy-loaded, so the redirect lands after its chunk resolves.
+    expect(await screen.findByRole('button', { name: /abrir carpeta de proyecto/i })).toBeInTheDocument()
   })
 })

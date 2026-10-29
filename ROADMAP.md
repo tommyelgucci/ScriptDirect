@@ -92,6 +92,22 @@ whether that's still worth it. Not decided yet — flagging it so the next
 session doesn't keep building against a differentiator list that's already
 stale.
 
+**Decision (2026-10-29):** pursue option (a). The primary wedge is open-format
+ownership via Fountain, with native Tauri distribution as the secondary one;
+`ARCHITECTURE.md`'s Differentiators now reflect that. Neither is validated
+against the competitor yet, so the next steps are about making the wedge
+real and testable rather than adding more parity features:
+
+1. **Fountain interop proof.** Round-trip a project through Highland/Fade In/
+   Trelby style exports and document what survives (title page, notes, dual
+   dialogue, boneyard, sections/synopses). Fountain features we don't edit
+   yet should at least be preserved untouched on save.
+2. **Fountain import polish.** Open any plain `.fountain` file (no
+   `project.json` needed) as a one-episode project.
+3. **"Leave anytime" export.** One-click export of the whole project as
+   plain Fountain files, to make the no-lock-in claim demonstrable.
+4. **Real-device Tauri testing** (keychain, UI), blocked on hardware access.
+
 ## Explicitly out of scope for now
 
 - Multi-user collaboration
